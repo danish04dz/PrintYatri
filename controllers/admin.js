@@ -6,7 +6,7 @@ const Agency = require("../models/Agency");
 
 
 // Admin Login Controller
-
+ 
 exports.adminLogin = async (req, res) => {
      const { email, password } = req.body;
     try {
