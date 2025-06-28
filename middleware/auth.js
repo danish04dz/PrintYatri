@@ -18,3 +18,11 @@ exports.authenticate = (req, res, next) => {
 }
 // This middleware checks for a JWT in the Authorization header, verifies it, and attaches the decoded user info to the request object.
 // If the token is missing or invalid, it responds with an appropriate error message...       
+
+
+exports.isAdmin =(req,res,next) =>{
+  if(req.user.role!=="admin"){
+    return res.status(403).json({message:'Admin only acces'})
+  }
+  next();
+}

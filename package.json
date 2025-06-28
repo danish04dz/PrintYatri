@@ -2,9 +2,10 @@
   "name": "server",
   "version": "1.0.0",
   "description": "��#\u0000 \u0000P\u0000r\u0000i\u0000n\u0000t\u0000Y\u0000a\u0000t\u0000r\u0000i\u0000\r\u0000 \u0000",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "main": "server.js",
+    "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
   },
   "keywords": [],
   "author": "",
@@ -16,6 +17,7 @@
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.16.0"
+    "mongoose": "^8.16.0",
+    "nodemon": "^3.1.10"
   }
 }

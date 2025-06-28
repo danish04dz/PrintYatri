@@ -14,7 +14,11 @@ app.use(express.json());
 
 
 
-// AdminJs Setup
+// Admin Route Setup
+const adminRoutes = require('./routes/admin');
+app.use('/api/admin', adminRoutes);
+
+
 
 
 app.get('/',(req,res)=>{
