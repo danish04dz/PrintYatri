@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const agencySchema = new mongoose.Schema({
-    Owner:{
+    ownerName:{
         type : String,
         required:true
     },

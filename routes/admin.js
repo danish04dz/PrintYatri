@@ -18,6 +18,8 @@ const {adminLogin,adminDashboard, createAgency} = require('../controllers/admin'
  // admin  Dashboard Route
 router.get('/dashboard', authenticate, isAdmin,adminDashboard)
 
+// Create Agency Route
+router.post('/create-agency', authenticate, isAdmin, createAgency);
 
 
 
