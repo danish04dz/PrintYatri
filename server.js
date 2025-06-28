@@ -19,11 +19,18 @@ const adminRoutes = require('./routes/admin');
 app.use('/api/admin', adminRoutes);
 
 
+// Agency Route Setup
+const agencyRoutes = require('./routes/agency');
+app.use('/api/agency', agencyRoutes);
 
 
+// home route /Deafault Route
+// This route is used to check if the server is running or not
 app.get('/',(req,res)=>{
     res.send("PrintYatri API is Running");
 });
+
+
 
 // MongoDb Connection
 

@@ -20,9 +20,20 @@ exports.authenticate = (req, res, next) => {
 // If the token is missing or invalid, it responds with an appropriate error message...       
 
 
+// protected routes for Admin only
+// This middleware checks if the user has an admin role
 exports.isAdmin =(req,res,next) =>{
   if(req.user.role!=="admin"){
     return res.status(403).json({message:'Admin only acces'})
+  }
+  next();
+}
+
+// This middleware check is the user is Agency or not
+//protected routes for agency only
+exports.isAgency = (req, res, next) => {
+  if (req.user.role !== "agency") {
+    return res.status(403).json({ message: 'Agency only access' });
   }
   next();
 }
