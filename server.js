@@ -5,7 +5,6 @@ const cors = require ('cors');
 const bcrypt = require('bcryptjs');
 
 
-const {adminJs, adminRouter} = require('./Admin');
 
 dotenv.config();
 
@@ -16,7 +15,7 @@ app.use(express.json());
 
 
 // AdminJs Setup
-app.use(adminJs.options.rootPath, adminRouter);
+
 
 app.get('/',(req,res)=>{
     res.send("PrintYatri API is Running");
