@@ -30,12 +30,13 @@ const busSchema = new mongoose.Schema({
         required: true
     },
     // Relationship with Conductor
-    conductorId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Conductor',
-        required: true
+    assignedConductor: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Conductor',
+    default: null
+},
 
-    },
+  
     // add timestamps
     createdAt: {
         type: Date,

@@ -37,3 +37,11 @@ exports.isAgency = (req, res, next) => {
   }
   next();
 }
+
+// This middleware checks if the user is a conductor
+exports.isConductor = (req, res, next) => {
+  if (req.user.role !== "conductor") {
+    return res.status(403).json({ message: 'Conductor only access' });
+  }
+  next();
+}
