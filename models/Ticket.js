@@ -36,7 +36,17 @@ const ticketSchema = new mongoose.Schema({
     issueDate: {
         type: Date,
         default: Date.now
-    }
+    },
+    busId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Bus',
+        required: true
+    },
+    conductorId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Conductor',
+        required: true
+    },
 }, {
     timestamps: true}
 );  

@@ -16,9 +16,6 @@ exports.authenticate = (req, res, next) => {
     next();
   });
 }
-// This middleware checks for a JWT in the Authorization header, verifies it, and attaches the decoded user info to the request object.
-// If the token is missing or invalid, it responds with an appropriate error message...       
-
 
 // protected routes for Admin only
 // This middleware checks if the user has an admin role

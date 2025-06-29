@@ -28,6 +28,8 @@ exports.createTicket = async (req, res) => {
             busNumber: conductor.assignedBuses.busNumber,
             conductorName: conductor.name,
             conductorPhone: conductor.phone,
+            conductorId: conductor._id,
+            busId: conductor.assignedBuses._id
         });
 
         // Save the ticket to the database
@@ -45,5 +47,18 @@ exports.createTicket = async (req, res) => {
 
         
  
+    }
+
+    // // Get all tickets for a conductor
+    exports.getTickets = async (req, res) => {
+        try {
+            const conductorId = req.user.id; // Assuming req.user is set by authentication middleware
+            const tickets = await Ticket.find({ conductorId }).populate('busId');
+            res.status(200).json(tickets);
+
+        } catch (error) {
+            console.error('Error fetching tickets:', error);
+            res.status(500).json({ message: 'Internal server error' });
+        }
     }
     
