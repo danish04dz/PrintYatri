@@ -24,6 +24,11 @@ const agencyRoutes = require('./routes/agency');
 app.use('/api/agency', agencyRoutes);
 
 
+// Conductor Route Setup
+const conductorRoutes = require('./routes/conductors');
+app.use('/api/conductor', conductorRoutes); 
+
+
 // home route /Deafault Route
 // This route is used to check if the server is running or not
 app.get('/',(req,res)=>{
