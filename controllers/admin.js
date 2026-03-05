@@ -1,9 +1,27 @@
 
-const bcrypt = require ('bcrypt');
-const jwt = require('jsonwebtoken');
 const Admin = require('../models/Admin');
 const Agency = require("../models/Agency");
 
+
+const generateAccessAndRefreshTokens = async (userId)=>{
+    try {
+       const user = await Admin.findById(userId)
+
+       const accessToken = user.generateAccessToken ()
+       const refreshToken = user.generateRefreshToken ()
+
+       user.refreshToken =refreshToken
+       await user.save({
+        validateBeforeSave : false
+       })
+       return  {accessToken, refreshToken}
+
+        
+    } catch (error) {
+        console.log("error while generating access token",error);
+        
+    }
+}
 
 // Admin Login Controller
  
@@ -15,26 +33,29 @@ exports.adminLogin = async (req, res) => {
             return res.status(404).json({ message: 'Admin not found' });
 
         }
-        const isMatch = await bcrypt.compare(password, admin.password);
-        if (!isMatch) {
-            return res.status(401).json({ message: 'Invalid credentials' });
-
-        }
-        const token = jwt.sign({ id: admin._id, role: admin.role, name:admin.name,email:admin.email }, process.env.JWT_SECRET, { expiresIn: '7d' });
-        res.status(200).json({
-            message: 'Login successful',
-            token,
-            admin: {
-                id: admin._id,
-                name: admin.name,
-                email: admin.email,
-                role: admin.role
-            }
-        });
-    } catch (error) {
-        console.error('Login error:', error);
-        res.status(500).json({ message: 'Server error' });  
-    }
+       if(!admin){
+           return res.status(400).json({message: " user does not exist"})
+          }
+       
+          const isPasswordValid = await admin.isPasswordCorrect(password)
+       
+          if(!isPasswordValid){
+           return res.status(400).json({message: " Invalid user credentials"})
+          }
+       
+          const {accessToken,refreshToken} = await generateAccessAndRefreshTokens(admin._id)
+       
+          const  loggedinAdmin = await Admin.findById(admin._id).select("-password -refreshToken")
+       
+          const options = {
+           httpOnly : true,
+           secure: true
+          }
+          return res.status(200).cookie("accessToken",accessToken,options).cookie("refreshToken",refreshToken,options).json({Admin : loggedinAdmin,accessToken,refreshToken})
+               
+           } catch (error) {
+               console.log("error in login controller", error)
+           }
 }
 
 

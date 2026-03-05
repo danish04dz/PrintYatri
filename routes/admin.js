@@ -1,13 +1,13 @@
-const expreess = require('express');
-const router = expreess.Router(); 
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');  
+const express = require('express');
+const router = express.Router(); 
+ 
 
 // middleware for authentication and authorization
-const {  authenticate, isAdmin } = require('../middleware/auth');
+const {  isAdmin, verifyJWT } = require('../middleware/auth');
 
 // Importing the admin controller functions
-const {adminLogin,adminDashboard, createAgency} = require('../controllers/admin');
+const {adminLogin,adminDashboard} = require('../controllers/admin');
+const { registerUser } = require('../controllers/user.controller');
 
 
 
@@ -16,10 +16,10 @@ const {adminLogin,adminDashboard, createAgency} = require('../controllers/admin'
 
 
  // admin  Dashboard Route
-router.get('/dashboard', authenticate, isAdmin,adminDashboard)
+router.get('/dashboard', verifyJWT, isAdmin,adminDashboard)
 
 // Create Agency Route
-router.post('/create-agency', authenticate, isAdmin, createAgency);
+router.post('/create-agency', registerUser);
 
 
 

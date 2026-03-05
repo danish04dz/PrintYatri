@@ -32,16 +32,12 @@ const busSchema = new mongoose.Schema({
     // Relationship with Conductor
     assignedConductor: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Conductor',
+    ref: 'User',
     default: null
 },
 
   
-    // add timestamps
-    createdAt: {
-        type: Date,
-        default: Date.now
-    },
+
    
 })
 

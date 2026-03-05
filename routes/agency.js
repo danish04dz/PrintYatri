@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 //impoerting the auth middleware
-const { authenticate, isAgency } = require('../middleware/auth');
+const {  } = require('../middleware/auth');
 
 // Importing the agency controller functions
 const { agencyLogin, agencyDashboard } = require('../controllers/agency');
@@ -16,13 +16,13 @@ const { createConductor } = require('../controllers/conductor');
 // Agency Login Route
 router.post('/login', agencyLogin);
 // Agency Dashboard Route
-router.get('/dashboard', authenticate, isAgency,agencyDashboard);
+router.get('/dashboard',agencyDashboard);
 
 // create Bus Route
-router.post('/createBus',authenticate, isAgency, createBus);
+router.post('/createBus', createBus);
 
 // create Conductor Route
-router.post('/createConductor', authenticate, isAgency, createConductor);
+router.post('/createConductor', createConductor);
 
 
 module.exports = router;

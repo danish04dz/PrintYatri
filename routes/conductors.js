@@ -13,12 +13,12 @@ const { conductorLogin,conductorDashboard } = require('../controllers/conductor'
 router.post('/login', conductorLogin);
 
 // Conductor Dashboard Route
-router.get('/dashboard', authenticate, isConductor,conductorDashboard)
+router.get('/dashboard',conductorDashboard)
 
 // Generating a new ticket
-router.post('/ticket', authenticate, isConductor, createTicket);
+router.post('/ticket', createTicket);
 // Get all tickets for a conductor
-router.get('/tickets', authenticate, isConductor, getTickets);
+router.get('/tickets', getTickets);
 
 
 

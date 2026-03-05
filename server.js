@@ -2,16 +2,40 @@ const express= require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const cors = require ('cors');
-const bcrypt = require('bcryptjs');
+
+
+const cookieParser = require("cookie-parser")
 
 
 
 dotenv.config();
 
 const app =express();
-app.use(cors());
-app.use(express.json());
+const allowedOrigins = [
+  "http://localhost:8081",  // Expo Web Dev
+  "http://10.196.16.136:8081",
+  "http://10.196.16.240:8081",
+  "http://10.85.153.136:8081",
+  "http://localhost:8081" // Your Expo Dev
+   // Your LAN Expo Dev
+];
 
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true
+}));
+app.use(express.json());
+app.use(cookieParser())
+
+// User Route Setup
+const userRoutes = require('./routes/user.routes');
+app.use('/api/user', userRoutes);
 
 
 // Admin Route Setup

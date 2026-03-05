@@ -1,44 +1,49 @@
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
+const User = require("../models/User.models")
 
-exports.authenticate = (req, res, next) => {
-  const token = req.headers['authorization']?.split(' ')[1];
-  
-  if (!token) {
-    return res.status(401).json({ message: 'No token provided' });
-  }
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-    if (err) {
-      return res.status(403).json({ message: 'Failed to authenticate token' });
+exports.verifyJWT = async (req,res,next) => {
+    try {
+       const token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer","")
+
+       if(!token){
+        return res.status(401).json({message: "Unauthorized request"})
+       }
+      const decodedToken = jwt.verify(token,process.env.ACCESS_TOKEN_SECRET,)
+
+      const user = await User.findById(decodedToken?._id).select("-password -refreshToken")
+
+      if(!user){
+        return res.status(401).json({message: "Invalid Access token"})
+      }
+      req.user = user
+      next()
+
+
+    } catch (error) {
+        console.log(error);
+        
     }
-    
-    req.user = decoded;
-    next();
-  });
+
 }
 
-// protected routes for Admin only
-// This middleware checks if the user has an admin role
-exports.isAdmin =(req,res,next) =>{
+exports.isAdmin = (req,res,next)=>{
   if(req.user.role!=="admin"){
-    return res.status(403).json({message:'Admin only acces'})
+    return res.status(403).json({message:'Admin only access'})
   }
   next();
 }
 
-// This middleware check is the user is Agency or not
-//protected routes for agency only
-exports.isAgency = (req, res, next) => {
-  if (req.user.role !== "agency") {
-    return res.status(403).json({ message: 'Agency only access' });
+exports.isConductor = (req,res,next)=>{
+  if(req.user.role!=="conductor"){
+    return res.status(403).json({message:'Conductor only access'})
   }
   next();
 }
 
-// This middleware checks if the user is a conductor
-exports.isConductor = (req, res, next) => {
-  if (req.user.role !== "conductor") {
-    return res.status(403).json({ message: 'Conductor only access' });
+exports.isAgency = (req,res,next)=>{
+  if(req.user.role!=="agency"){
+    return res.status(403).json({message:'Agency only access'})
   }
   next();
-}
+} 
