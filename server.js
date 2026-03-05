@@ -16,7 +16,8 @@ const allowedOrigins = [
   "http://10.196.16.136:8081",
   "http://10.196.16.240:8081",
   "http://10.85.153.136:8081",
-  "http://localhost:8081" // Your Expo Dev
+  "http://localhost:8081",
+  "exp://10.98.155.136:8081" // Your Expo Dev
    // Your LAN Expo Dev
 ];
 
