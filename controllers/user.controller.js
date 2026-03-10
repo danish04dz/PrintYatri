@@ -60,7 +60,8 @@ exports.registerUser = async (req,res) => {
             name,
             phone,
             email,
-            password,    
+            password
+                
         })
         
 

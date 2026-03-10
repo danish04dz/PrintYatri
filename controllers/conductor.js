@@ -1,5 +1,5 @@
 const Conductor = require('../models/Conductor');
-const Bus = require('../models/Bus');
+const Bus = require('../models/Bus.model');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 

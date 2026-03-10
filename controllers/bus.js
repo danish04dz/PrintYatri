@@ -1,4 +1,4 @@
-const Bus = require('../models/Bus');
+const Bus = require('../models/Bus.model');
 const Conductor = require('../models/Conductor');
 
 // Create Bus Controller

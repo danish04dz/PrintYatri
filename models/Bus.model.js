@@ -10,25 +10,14 @@ const busSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    StartingPoint: {
-        type: String,
-        required: true
-    },
-    Destination: {
-        type: String,
-        required: true
-    },
+    
     totalSeats: {
         type: Number,   
         required: true,
     },
 
-    // Relationship with Agency
-    agencyId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Agency',
-        required: true
-    },
+ 
+   
     // Relationship with Conductor
     assignedConductor: {
     type: mongoose.Schema.Types.ObjectId,
@@ -39,6 +28,6 @@ const busSchema = new mongoose.Schema({
   
 
    
-})
+},{timestamps: true});
 
 module.exports = mongoose.model("Bus", busSchema);

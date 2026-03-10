@@ -1,6 +1,6 @@
 
 const Admin = require('../models/Admin');
-const Agency = require("../models/Agency");
+const Agency = require("../models/Agency.model");
 
 
 const generateAccessAndRefreshTokens = async (userId)=>{
@@ -28,6 +28,9 @@ const generateAccessAndRefreshTokens = async (userId)=>{
 exports.adminLogin = async (req, res) => {
      const { email, password } = req.body;
     try {
+        if(!email || !password){
+            return res.status(400).json({message: "Email and password are required"})
+          }
         const admin = await Admin.findOne({ email});
         if (!admin) {
             return res.status(404).json({ message: 'Admin not found' });

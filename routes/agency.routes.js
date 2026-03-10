@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
 
-//impoerting the auth middleware
-const {  } = require('../middleware/auth');
+//importing the auth middleware
+const { isAgency } = require('../middleware/auth');
 
 // Importing the agency controller functions
-const { agencyLogin, agencyDashboard } = require('../controllers/agency');
+const { addBus,addRoutesAndStops,assignConductor } = require('../controllers/agency.controller');
 
 // importing the bus controller functions
 const { createBus } = require('../controllers/bus');
@@ -13,13 +13,10 @@ const { createBus } = require('../controllers/bus');
 // importing Conductor controller functions
 const { createConductor } = require('../controllers/conductor');
 
-// Agency Login Route
-router.post('/login', agencyLogin);
-// Agency Dashboard Route
-router.get('/dashboard',agencyDashboard);
+
 
 // create Bus Route
-router.post('/createBus', createBus);
+router.post('/createBus', addBus);
 
 // create Conductor Route
 router.post('/createConductor', createConductor);

@@ -16,6 +16,7 @@ router.post('/login',loginUser)
 // logout
 router.post('/logout',verifyJWT,logoutUser)
 
+// get current user after app reload
 router.get('/me',verifyJWT,getCurrentUser)
 
 

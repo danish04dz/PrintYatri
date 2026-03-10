@@ -35,6 +35,16 @@ const userSchema = new mongoose.Schema({
     refreshToken : {
         type : String
     },
+    agency : {
+        type : mongoose.Schema.Types.ObjectId,
+        ref : "Agency",
+        default : null
+    },
+    assignedBus : {
+        type : mongoose.Schema.Types.ObjectId,
+        ref : "Bus",
+        default : null
+    }
 
 
 },{timestamps: true})

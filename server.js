@@ -40,12 +40,12 @@ app.use('/api/user', userRoutes);
 
 
 // Admin Route Setup
-const adminRoutes = require('./routes/admin');
+const adminRoutes = require('./routes/admin.routes');
 app.use('/api/admin', adminRoutes);
 
 
 // Agency Route Setup
-const agencyRoutes = require('./routes/agency');
+const agencyRoutes = require('./routes/agency.routes');
 app.use('/api/agency', agencyRoutes);
 
 
