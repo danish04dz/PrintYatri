@@ -18,11 +18,7 @@ const routeSchema = new mongoose.Schema({
         required:true
     },
 
-    agency:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"Agency",
-        required:true
-    }
+    
 
 },{timestamps:true})
 

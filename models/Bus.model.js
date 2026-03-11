@@ -15,7 +15,10 @@ const busSchema = new mongoose.Schema({
         type: Number,   
         required: true,
     },
-
+ agency:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref:"User"
+    },
  
    
     // Relationship with Conductor

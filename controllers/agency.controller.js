@@ -25,7 +25,8 @@ exports.addBus = async (req, res) => {
         const newBus = new Bus ({
             busNumber,
             busName,
-            totalSeats
+            totalSeats,
+            agency : req.user._id
         })
         await newBus.save();    
 
@@ -78,7 +79,7 @@ exports.addRoutesAndStops = async (req, res) => {
             startRouteName,
             endRouteName,
             bus: bus._id,
-            agency: bus.agency
+            
 
         })
 

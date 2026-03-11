@@ -6,7 +6,7 @@ exports.createAgency = async (req, res) => {
     try {
 
         // 1️⃣ get data from body
-        const { email, phone, agencyName, agencyAddress } = req.body
+        const { email, phone, agencyName, agencyAddress } = req.body;
 
         if (!email && !phone) {
             return res.status(400).json({
