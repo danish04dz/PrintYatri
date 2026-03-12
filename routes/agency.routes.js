@@ -5,13 +5,12 @@ const router = express.Router();
 const { isAgency, verifyJWT } = require('../middleware/auth');
 
 // Importing the agency controller functions
-const { addBus,addRoutesAndStops,assignConductor } = require('../controllers/agency.controller');
+const { addBus,addRoutesAndStops, registerConductor, assignConductor } = require('../controllers/agency.controller');
 
 // importing the bus controller functions
 
 
-// importing Conductor controller functions
-const { createConductor } = require('../controllers/conductor');
+
 
 
 
@@ -25,7 +24,7 @@ router.post('/addRoutesAndStops',verifyJWT,isAgency,addRoutesAndStops);
 router.post('/assignConductor',verifyJWT,isAgency,assignConductor)
 
 // create Conductor Route
-router.post('/createConductor', createConductor);
+router.post('/registerConductor',verifyJWT, isAgency, registerConductor);
 
 
 module.exports = router;

@@ -50,7 +50,7 @@ app.use('/api/agency', agencyRoutes);
 
 
 // Conductor Route Setup
-const conductorRoutes = require('./routes/conductors');
+const conductorRoutes = require('./routes/conductor.routes');
 app.use('/api/conductor', conductorRoutes); 
 
 

@@ -3,6 +3,7 @@ const Bus = require ('../models/Bus.model')
 const Route = require('../models/Routes.model')
 const Stop = require('../models/Stop.model')
 const User = require('../models/User.models')
+const Agency = require('../models/Agency.model')
 
 // Agency owner add Busses to the system
 exports.addBus = async (req, res) => {
@@ -13,20 +14,30 @@ exports.addBus = async (req, res) => {
         // 2:- validate the details is any field are missing or not
         if(!busNumber || !busName || !totalSeats) {
             return res.status(400).json({msg : "Please provide all the details"});
+
         }
+      
 
         // 3:- check the bus is already exist or not
-        const existingBus = await Bus.findOne({ busNumber });
+        const existingBus = await Bus.Bus.findOne({ busNumber: busNumber.toUpperCase() })
+
         if(existingBus) {
             return res.status(400).json({msg : "bus is Already Registered"});
         }
+        const agency = await Agency.findOne({ owner: req.user._id });
+
+if(!agency){
+    return res.status(404).json({
+        message:"Agency not found"
+    })
+}
 
         // 4:- create bus entry in the database
         const newBus = new Bus ({
             busNumber,
             busName,
             totalSeats,
-            agency : req.user._id
+            agency: agency._id
         })
         await newBus.save();    
 
@@ -52,6 +63,11 @@ exports.addRoutesAndStops = async (req, res) => {
                 message:"Please provide all fields"
             })
         }
+        if(!Array.isArray(stops) || stops.length === 0){
+    return res.status(400).json({
+        message:"Stops must be a non empty array"
+    })
+}
 
         // 3️⃣ find bus
         const bus = await Bus.findOne({ busNumber })
@@ -117,6 +133,59 @@ exports.addRoutesAndStops = async (req, res) => {
 
 }
 
+// Add or Register Conductor
+exports.registerConductor = async (req, res) => {
+    try {
+        const { name, phone, email, password } = req.body;
+        if(!name || !phone || !email || !password ){
+            return res.status(400).json({msg: " All fields are required"})
+        }
+
+        const existingConductor = await User.findOne({
+            $or : [{phone},{email}]
+        })
+        if(existingConductor){
+            return res.status(400).json({msg : "User or Conductor Already exist"})
+        }
+
+       const agency = await Agency.findOne({ owner: req.user._id });
+
+if(!agency){
+    return res.status(404).json({
+        message:"Agency not found"
+    })
+}
+
+const conductor = await User.create({
+
+    name,
+    phone,
+    email,
+    password,
+    role:"conductor",
+    agency: agency._id
+
+})
+
+        const createdConductor = await User.findById(conductor._id).select("-password -refreshToken")
+
+        if(!createdConductor){
+            return res.status(400).json({message: " something went wrong during creating conductor!"})
+        }
+
+        return res.status(201).json(
+            {message: "User Conductor created successfully",
+            user: createdConductor}
+        )
+
+
+        
+    } catch (error) {
+        console.log(error)
+        res.status(400).json({msg : "error while registering the conductor"})
+    }
+}
+
 // Agency owner assign conductor to the bus
 exports.assignConductor = async (req, res) => {
 
@@ -149,13 +218,27 @@ exports.assignConductor = async (req, res) => {
                 msg:"User is not a conductor"
             })
         }
+        const agency = await Agency.findOne({ owner: req.user._id })
+        if(!agency){
+    return res.status(404).json({
+        msg:"Agency not found"
+    })
+}
+if(user.agency.toString() !== agency._id.toString()){
+    return res.status(403).json({
+        msg:"You cannot assign conductor from another agency"
+    })
+}
 
         // 4️⃣ find bus
-        const bus = await Bus.findOne({ busNumber })
+        const bus = await Bus.findOne({ 
+              busNumber,
+              agency: agency._id
+        })
 
         if(!bus){
             return res.status(404).json({
-                msg:"Bus not found"
+                msg:"Bus not found or this bus is from different agency"
             })
         }
 

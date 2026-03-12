@@ -4,7 +4,10 @@ const busSchema = new mongoose.Schema({
     busNumber: {
         type: String,
         required: true,
-        unique: true
+        unique: true,
+        uppercase:true,   // ✅ automatically uppercase
+        trim:true,
+        match: [/^[A-Z]{2}[0-9]{2}[A-Z]{2}[0-9]{4}$/, "Invalid Bus Number Format"]
     },
     busName:{
         type: String,
@@ -17,7 +20,7 @@ const busSchema = new mongoose.Schema({
     },
  agency:{
         type: mongoose.Schema.Types.ObjectId,
-        ref:"User"
+        ref:"Agency"
     },
  
    

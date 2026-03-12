@@ -116,6 +116,8 @@ exports.loginUser = async (req,res) =>{
    const {accessToken,refreshToken} = await generateAccessAndRefreshTokens(user._id)
 
    const  loggedinUser = await User.findById(user._id).select("-password -refreshToken")
+    .populate("agency")
+    .populate("assignedBus")
 
    const options = {
     httpOnly : true,
