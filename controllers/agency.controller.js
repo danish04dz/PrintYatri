@@ -5,6 +5,9 @@ const Stop = require('../models/Stop.model')
 const User = require('../models/User.models')
 const Agency = require('../models/Agency.model')
 
+
+
+
 // Agency owner add Busses to the system
 exports.addBus = async (req, res) => {
     try {
@@ -19,7 +22,7 @@ exports.addBus = async (req, res) => {
       
 
         // 3:- check the bus is already exist or not
-        const existingBus = await Bus.Bus.findOne({ busNumber: busNumber.toUpperCase() })
+        const existingBus = await Bus.findOne({ busNumber: busNumber.toUpperCase() })
 
         if(existingBus) {
             return res.status(400).json({msg : "bus is Already Registered"});

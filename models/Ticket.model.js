@@ -8,7 +8,8 @@ const ticketSchema = new mongoose.Schema({
 
     ticketId : {
         type : String,
-        required : true
+        required : true,
+        unique : true
     },
     fare:{
         type:Number,
@@ -17,7 +18,7 @@ const ticketSchema = new mongoose.Schema({
 
     route:{
         type:mongoose.Schema.Types.ObjectId,
-        ref:"Routes",
+        ref:"Route",
         required:true
     },
 

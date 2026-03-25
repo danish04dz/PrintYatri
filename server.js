@@ -53,6 +53,10 @@ app.use('/api/agency', agencyRoutes);
 const conductorRoutes = require('./routes/conductor.routes');
 app.use('/api/conductor', conductorRoutes); 
 
+// bus routes
+const AgencyData = require('./routes/bus.routes')
+app.use('/api/data',AgencyData )
+
 
 // home route /Deafault Route
 // This route is used to check if the server is running or not

@@ -4,6 +4,7 @@ const Route = require('../models/Routes.model')
 const Stop = require('../models/Stop.model')
 const User = require('../models/User.models')
 const Agency = require('../models/Agency.model')
+const Ticket = require('../models/Ticket.model')
 
 // get Routes And Stops for conductor
 
@@ -54,6 +55,97 @@ exports.getRoutesAndSTops = async (req, res) => {
 
     return res.status(500).json({
       message: "Internal server error",
+    });
+  }
+};
+
+
+
+
+// generate Ticket by conductor
+
+exports.generateTicket = async (req, res) => {
+  try {
+
+    const { passengerName, startRouteName, endRouteName, fare } = req.body;
+
+    if (!startRouteName || !endRouteName || !fare) {
+      return res.status(400).json({
+        message: "All fields are required (Passenger name optional)"
+      });
+    }
+
+    const conductor = await User.findById(req.user._id)
+    .populate("assignedBus agency");
+
+    if (!conductor) {
+      return res.status(404).json({ message: "Conductor not found" });
+    }
+
+    if (!conductor.assignedBus) {
+      return res.status(400).json({
+        message: "No bus assigned to conductor"
+      });
+    }
+
+    const route = await Route.findOne({
+      bus: conductor.assignedBus._id
+    });
+
+    if (!route) {
+      return res.status(404).json({
+        message: "Route not found for this bus"
+      });
+    }
+
+    const pickupStop = await Stop.findOne({
+      route: route._id,
+      stopName: startRouteName
+    });
+
+    const dropStop = await Stop.findOne({
+      route: route._id,
+      stopName: endRouteName
+    });
+
+    if (!pickupStop || !dropStop) {
+      return res.status(404).json({
+        message: "Stops not found"
+      });
+    }
+
+    const ticketId = `TKT-${Math.floor(100000 + Math.random() * 900000)}`;
+
+    const ticket = await Ticket.create({
+      passengerName,
+      ticketId,
+      fare,
+      route: route._id,
+      pickupStop: pickupStop._id,
+      dropStop: dropStop._id,
+      bus: conductor.assignedBus._id,
+      conductor: conductor._id,
+      agency: conductor.agency._id
+    });
+
+    const ticketDetails = await Ticket.findById(ticket._id)
+      .populate("bus", "busNumber busName")
+      .populate("route", "startRouteName endRouteName")
+      .populate("pickupStop", "stopName")
+      .populate("dropStop", "stopName")
+      .populate("conductor", "name")
+      .populate("agency", "agencyName");
+
+    return res.status(201).json({
+      message: "Ticket generated successfully",
+      ticket: ticketDetails
+    });
+
+  } catch (err) {
+    console.log(err);
+
+    return res.status(500).json({
+      message: "Error while generating ticket"
     });
   }
 };
