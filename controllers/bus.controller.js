@@ -91,7 +91,7 @@ exports.getRoutesWithBus = async (req, res) => {
   }
 };
 
-// view All tickets and export in
+// view All tickets and export in z
 exports.getConductorTickets = async (req, res) => {
   try {
     const { filter } = req.query; // today, yesterday, week, month, all
