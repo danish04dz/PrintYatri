@@ -1,6 +1,7 @@
 const Bus = require('../models/Bus.model');
 const User = require('../models/User.models');
 const Agency = require('../models/Agency.model');
+const Route = require('../models/Routes.model');
 
 exports.getAllConductorsAndBusData = async (req, res) => {
   try {
@@ -30,6 +31,7 @@ exports.getAllConductorsAndBusData = async (req, res) => {
     const buses = await Bus.find({
       agency: agencyId,
     }).populate("assignedConductor", "name phone");
+
 
     // ✅ COUNTS
     const totalConductors = conductors.length;
@@ -70,6 +72,21 @@ exports.getAllConductorsAndBusData = async (req, res) => {
     return res.status(500).json({
       msg: "Error while fetching data",
     });
+  }
+};
+
+// get all routes
+exports.getRoutesWithBus = async (req, res) => {
+  try {
+    const routes = await Route.find()
+      .populate("bus", "busNumber busName");
+
+    res.status(200).json({
+      success: true,
+      routes,
+    });
+  } catch (error) {
+    res.status(500).json({ msg: "Error fetching routes" });
   }
 };
 
