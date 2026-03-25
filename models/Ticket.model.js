@@ -5,6 +5,12 @@ const ticketSchema = new mongoose.Schema({
         type:String,
        
     },
+    numberPasanger :{
+        type : String,
+        required : true,
+        
+
+    },
 
     ticketId : {
         type : String,

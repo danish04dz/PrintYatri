@@ -66,20 +66,38 @@ exports.getRoutesAndSTops = async (req, res) => {
 
 exports.generateTicket = async (req, res) => {
   try {
+    const {
+      passengerName,
+      startRouteName,
+      endRouteName,
+      fare,
+      numberPassenger
+    } = req.body;
 
-    const { passengerName, startRouteName, endRouteName, fare } = req.body;
-
+    // ✅ validation
     if (!startRouteName || !endRouteName || !fare) {
       return res.status(400).json({
-        message: "All fields are required (Passenger name optional)"
+        message: "startRouteName, endRouteName and fare are required"
       });
     }
 
+    // ✅ default passenger count
+    const passengerCount = numberPassenger ? Number(numberPassenger) : 1;
+
+    if (passengerCount <= 0) {
+      return res.status(400).json({
+        message: "Invalid passenger count"
+      });
+    }
+
+    // ✅ get conductor
     const conductor = await User.findById(req.user._id)
-    .populate("assignedBus agency");
+      .populate("assignedBus agency");
 
     if (!conductor) {
-      return res.status(404).json({ message: "Conductor not found" });
+      return res.status(404).json({
+        message: "Conductor not found"
+      });
     }
 
     if (!conductor.assignedBus) {
@@ -88,6 +106,7 @@ exports.generateTicket = async (req, res) => {
       });
     }
 
+    // ✅ get route
     const route = await Route.findOne({
       bus: conductor.assignedBus._id
     });
@@ -98,6 +117,7 @@ exports.generateTicket = async (req, res) => {
       });
     }
 
+    // ✅ get stops
     const pickupStop = await Stop.findOne({
       route: route._id,
       stopName: startRouteName
@@ -114,12 +134,18 @@ exports.generateTicket = async (req, res) => {
       });
     }
 
-    const ticketId = `TKT-${Math.floor(100000 + Math.random() * 900000)}`;
+    // ✅ generate ticket id
+    const ticketId = `TKT-${Date.now()}`;
 
+    // ✅ total fare
+    const totalFare = Number(fare) * passengerCount;
+
+    // ✅ create ticket
     const ticket = await Ticket.create({
       passengerName,
+      numberPasanger: passengerCount,
       ticketId,
-      fare,
+      fare: totalFare,
       route: route._id,
       pickupStop: pickupStop._id,
       dropStop: dropStop._id,
@@ -128,6 +154,7 @@ exports.generateTicket = async (req, res) => {
       agency: conductor.agency._id
     });
 
+    // ✅ populate response (optional but useful)
     const ticketDetails = await Ticket.findById(ticket._id)
       .populate("bus", "busNumber busName")
       .populate("route", "startRouteName endRouteName")
@@ -136,16 +163,17 @@ exports.generateTicket = async (req, res) => {
       .populate("conductor", "name")
       .populate("agency", "agencyName");
 
+    // ✅ response
     return res.status(201).json({
       message: "Ticket generated successfully",
       ticket: ticketDetails
     });
 
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    console.log("Generate Ticket Error:", error);
 
     return res.status(500).json({
-      message: "Error while generating ticket"
+      message: "Internal server error"
     });
   }
 };
