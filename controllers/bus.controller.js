@@ -2,6 +2,7 @@ const Bus = require('../models/Bus.model');
 const User = require('../models/User.models');
 const Agency = require('../models/Agency.model');
 const Route = require('../models/Routes.model');
+const Ticket = require('../models/Ticket.model')
 
 exports.getAllConductorsAndBusData = async (req, res) => {
   try {
@@ -91,3 +92,71 @@ exports.getRoutesWithBus = async (req, res) => {
 };
 
 // view All tickets and export in
+exports.getConductorTickets = async (req, res) => {
+  try {
+    const { filter } = req.query; // today, yesterday, week, month, all
+
+    const conductorId = req.user._id;
+
+    let dateFilter = {};
+
+    const now = new Date();
+
+    if (filter === "today") {
+      const start = new Date(now.setHours(0, 0, 0, 0));
+      const end = new Date(now.setHours(23, 59, 59, 999));
+      dateFilter = { createdAt: { $gte: start, $lte: end } };
+    }
+
+    if (filter === "yesterday") {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      const start = new Date(yesterday.setHours(0, 0, 0, 0));
+      const end = new Date(yesterday.setHours(23, 59, 59, 999));
+
+      dateFilter = { createdAt: { $gte: start, $lte: end } };
+    }
+
+    if (filter === "week") {
+      const start = new Date();
+      start.setDate(start.getDate() - 7);
+
+      dateFilter = { createdAt: { $gte: start } };
+    }
+
+    if (filter === "month") {
+      const start = new Date();
+      start.setMonth(start.getMonth() - 1);
+
+      dateFilter = { createdAt: { $gte: start } };
+    }
+
+    // 👉 Fetch tickets
+    const tickets = await Ticket.find({
+      conductor: conductorId,
+      ...dateFilter,
+    })
+      .populate("pickupStop", "stopName")
+      .populate("dropStop", "stopName")
+      .populate("bus", "busName busNumber")
+      .sort({ createdAt: -1 });
+
+    // 👉 Summary
+    const totalTickets = tickets.length;
+
+    const totalAmount = tickets.reduce((sum, t) => sum + t.fare, 0);
+
+    return res.status(200).json({
+      tickets,
+      totalTickets,
+      totalAmount,
+    });
+
+  } catch (error) {
+    console.log("History Error:", error);
+    return res.status(500).json({
+      message: "Internal Server Error",
+    });
+  }
+};
