@@ -1,25 +1,47 @@
 const mongoose = require("mongoose");
 
-const routeSchema = new mongoose.Schema({
-
-    startRouteName:{
-        type:String,
-        required:true
+const routeSchema = new mongoose.Schema(
+  {
+    startRouteName: {
+      type: String,
+      required: true,
+      trim: true,
     },
 
-    endRouteName:{
-        type:String,
-        required:true
+    startTime: {
+      type: String,
+      trim: true,
     },
 
-    bus:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"Bus",
-        required:true
+    endRouteName: {
+      type: String,
+      required: true,
+      trim: true,
     },
 
-    
+    endTime: {
+      type: String,
+      trim: true,
+    },
 
-},{timestamps:true})
+    // ✅ FIXED: was typo "totlaDuration"
+    totalDuration: {
+      type: String,
+      trim: true,
+    },
 
-module.exports = mongoose.model("Route",routeSchema)
+    bus: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Bus",
+      required: true,
+    },
+
+    agency: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Agency",
+    },
+  },
+  { timestamps: true }
+);
+
+module.exports = mongoose.model("Route", routeSchema);

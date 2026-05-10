@@ -1,0 +1,664 @@
+{
+  "info": {
+    "name": "PrintYatri API v2.0",
+    "_postman_id": "printyatri-api-v2",
+    "description": "Complete API collection for PrintYatri POS Bus Ticketing System",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000/api" },
+    { "key": "adminToken", "value": "" },
+    { "key": "agencyToken", "value": "" },
+    { "key": "conductorToken", "value": "" },
+    { "key": "agencyId", "value": "" },
+    { "key": "conductorId", "value": "" },
+    { "key": "busId", "value": "" },
+    { "key": "routeId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "🏥 Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/health"
+          }
+        }
+      ]
+    },
+    {
+      "name": "👤 User Auth",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/user/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Rajesh Kumar\",\n  \"phone\": \"9876543210\",\n  \"email\": \"rajesh@example.com\",\n  \"password\": \"Test@1234\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.accessToken) { pm.collectionVariables.set('agencyToken', res.accessToken); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/user/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"rajesh@example.com\",\n  \"password\": \"Test@1234\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login Conductor",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.accessToken) { pm.collectionVariables.set('conductorToken', res.accessToken); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/user/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"9123456780\",\n  \"password\": \"Conductor@123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Current User (me)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{agencyToken}}" }],
+            "url": "{{baseUrl}}/user/me"
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/user/refresh-token",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"<paste_refresh_token_here>\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{conductorToken}}" }
+            ],
+            "url": "{{baseUrl}}/user/profile",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Rajesh Kumar Updated\",\n  \"phone\": \"9876543211\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Upload Profile Photo",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{conductorToken}}" }],
+            "url": "{{baseUrl}}/user/upload-photo",
+            "body": {
+              "mode": "formdata",
+              "formdata": [{ "key": "photo", "type": "file", "src": "" }]
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{agencyToken}}" }],
+            "url": "{{baseUrl}}/user/logout"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔐 Admin",
+      "item": [
+        {
+          "name": "Admin Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.accessToken) { pm.collectionVariables.set('adminToken', res.accessToken); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/admin/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@printyatri.com\",\n  \"password\": \"Aspire@123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Admin Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/admin/dashboard"
+          }
+        },
+        {
+          "name": "Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/admin/stats"
+          }
+        },
+        {
+          "name": "Get All Agencies",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/admin/agencies?status=approved&page=1&limit=20",
+              "query": [
+                { "key": "status", "value": "approved" },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Agency (for existing user)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.agency) { pm.collectionVariables.set('agencyId', res.agency._id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/admin/create-agency",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"rajesh@example.com\",\n  \"agencyName\": \"Rajesh Travels\",\n  \"agencyAddress\": \"Gorakhpur, UP\",\n  \"city\": \"Gorakhpur\",\n  \"agencyPhone\": \"9876543210\",\n  \"agencyEmail\": \"info@rakeshtravels.com\",\n  \"licenseNumber\": \"UP-32-2024-001\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Agency Status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/admin/agencies/{{agencyId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"approved\",\n  \"subscriptionPlan\": \"paid\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Suspend Agency",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/admin/agencies/{{agencyId}}/suspend",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Pending document verification\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Agency",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/admin/agencies/{{agencyId}}"
+          }
+        },
+        {
+          "name": "Get All Conductors",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/admin/conductors?page=1&limit=20",
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get All Tickets",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/admin/tickets?filter=today&page=1&limit=30",
+              "query": [
+                { "key": "filter", "value": "today", "description": "today | week | month | all" },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "30" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Demo Requests",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/admin/demo-requests?status=pending",
+              "query": [{ "key": "status", "value": "pending" }]
+            }
+          }
+        },
+        {
+          "name": "Update Demo Request",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/admin/demo-requests/<requestId>",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"contacted\",\n  \"notes\": \"Called on 04-May. Interested in paid plan.\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🏢 Agency",
+      "item": [
+        {
+          "name": "Get Agency Stats",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{agencyToken}}" }],
+            "url": "{{baseUrl}}/agency/stats"
+          }
+        },
+        {
+          "name": "Add Bus",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.bus) { pm.collectionVariables.set('busId', res.bus._id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{agencyToken}}" }
+            ],
+            "url": "{{baseUrl}}/agency/addBus",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"busNumber\": \"UP 32 AB 1234\",\n  \"busName\": \"Gorakhpur Express\",\n  \"totalSeats\": 42,\n  \"busType\": \"Non-AC\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get All Buses",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{agencyToken}}" }],
+            "url": "{{baseUrl}}/agency/buses"
+          }
+        },
+        {
+          "name": "Update Bus",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{agencyToken}}" }
+            ],
+            "url": "{{baseUrl}}/agency/buses/{{busId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"busName\": \"Gorakhpur Super Express\",\n  \"totalSeats\": 45,\n  \"busType\": \"AC\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Bus",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{agencyToken}}" }],
+            "url": "{{baseUrl}}/agency/buses/{{busId}}"
+          }
+        },
+        {
+          "name": "Add Routes & Stops",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.route) { pm.collectionVariables.set('routeId', res.route._id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{agencyToken}}" }
+            ],
+            "url": "{{baseUrl}}/agency/addRoutesAndStops",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"busNumber\": \"UP 32 AB 1234\",\n  \"startRouteName\": \"Gorakhpur Bus Stand\",\n  \"startTime\": \"06:30 AM\",\n  \"endRouteName\": \"Lucknow\",\n  \"endTime\": \"12:30 PM\",\n  \"totalDuration\": \"6 Hours\",\n  \"stops\": [\n    { \"stopName\": \"Gorakhpur Bus Stand\", \"order\": 1 },\n    { \"stopName\": \"Basti\", \"order\": 2 },\n    { \"stopName\": \"Faizabad\", \"order\": 3 },\n    { \"stopName\": \"Ayodhya\", \"order\": 4 },\n    { \"stopName\": \"Lucknow\", \"order\": 5 }\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Route",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{agencyToken}}" }
+            ],
+            "url": "{{baseUrl}}/agency/routes/{{routeId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"startTime\": \"07:00 AM\",\n  \"endTime\": \"01:00 PM\",\n  \"totalDuration\": \"6 Hours\",\n  \"stops\": [\n    { \"stopName\": \"Gorakhpur Bus Stand\", \"order\": 1 },\n    { \"stopName\": \"Basti\", \"order\": 2 },\n    { \"stopName\": \"Faizabad\", \"order\": 3 },\n    { \"stopName\": \"Ayodhya\", \"order\": 4 },\n    { \"stopName\": \"Lucknow\", \"order\": 5 }\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "Register Conductor",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.conductor) { pm.collectionVariables.set('conductorId', res.conductor._id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{agencyToken}}" }
+            ],
+            "url": "{{baseUrl}}/agency/registerConductor",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ramesh Singh\",\n  \"phone\": \"9123456780\",\n  \"email\": \"ramesh.conductor@example.com\",\n  \"password\": \"Conductor@123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get All Conductors",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{agencyToken}}" }],
+            "url": "{{baseUrl}}/agency/conductors"
+          }
+        },
+        {
+          "name": "Assign Conductor to Bus",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{agencyToken}}" }
+            ],
+            "url": "{{baseUrl}}/agency/assignConductor",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"9123456780\",\n  \"busNumber\": \"UP 32 AB 1234\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Unassign Conductor",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{agencyToken}}" }],
+            "url": "{{baseUrl}}/agency/conductors/{{conductorId}}/unassign"
+          }
+        },
+        {
+          "name": "Delete Conductor",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{agencyToken}}" }],
+            "url": "{{baseUrl}}/agency/conductors/{{conductorId}}"
+          }
+        },
+        {
+          "name": "Upload Conductor Photo",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{agencyToken}}" }],
+            "url": "{{baseUrl}}/agency/conductors/{{conductorId}}/upload-photo",
+            "body": {
+              "mode": "formdata",
+              "formdata": [{ "key": "photo", "type": "file", "src": "", "description": "Conductor profile image (jpg/png/webp, max 5MB)" }]
+            }
+          }
+        },
+        {
+          "name": "Upload Agency Logo",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{agencyToken}}" }],
+            "url": "{{baseUrl}}/agency/upload-logo",
+            "body": {
+              "mode": "formdata",
+              "formdata": [{ "key": "logo", "type": "file", "src": "", "description": "Agency logo or owner photo (jpg/png/webp, max 5MB)" }]
+            }
+          }
+        },
+        {
+          "name": "Agency Ticket History",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{agencyToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/agency/tickets?filter=today&page=1&limit=30",
+              "query": [
+                { "key": "filter", "value": "today", "description": "today | yesterday | week | month | all" },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "30" },
+                { "key": "conductorId", "value": "", "disabled": true },
+                { "key": "busId", "value": "", "disabled": true }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🎫 Conductor (POS)",
+      "item": [
+        {
+          "name": "Get Routes & Stops",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{conductorToken}}" }],
+            "url": "{{baseUrl}}/conductor/getRoutesAndStops"
+          }
+        },
+        {
+          "name": "Generate Ticket (Without Name)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{conductorToken}}" }
+            ],
+            "url": "{{baseUrl}}/conductor/generateTicket",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"startRouteName\": \"Gorakhpur Bus Stand\",\n  \"endRouteName\": \"Basti\",\n  \"fare\": 80,\n  \"numberPassengers\": 1,\n  \"paymentMode\": \"cash\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Generate Ticket (With Name)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{conductorToken}}" }
+            ],
+            "url": "{{baseUrl}}/conductor/generateTicket",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"passengerName\": \"Anil Verma\",\n  \"startRouteName\": \"Basti\",\n  \"endRouteName\": \"Lucknow\",\n  \"fare\": 150,\n  \"numberPassengers\": 2,\n  \"paymentMode\": \"upi\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Ticket History (Today)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{conductorToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/conductor/tickets?filter=today",
+              "query": [{ "key": "filter", "value": "today", "description": "today | yesterday | week | month | all" }]
+            }
+          }
+        },
+        {
+          "name": "Get Ticket History (Week)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{conductorToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/conductor/tickets?filter=week",
+              "query": [{ "key": "filter", "value": "week" }]
+            }
+          }
+        },
+        {
+          "name": "Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{conductorToken}}" }],
+            "url": "{{baseUrl}}/conductor/stats"
+          }
+        },
+        {
+          "name": "Conductor Profile",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{conductorToken}}" }],
+            "url": "{{baseUrl}}/conductor/profile"
+          }
+        }
+      ]
+    },
+    {
+      "name": "📊 Agency Dashboard Data",
+      "item": [
+        {
+          "name": "Get Conductors & Buses Overview",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{agencyToken}}" }],
+            "url": "{{baseUrl}}/data/getConductorsAndBusses"
+          }
+        },
+        {
+          "name": "Get Routes with Stops",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{agencyToken}}" }],
+            "url": "{{baseUrl}}/data/getRoutes"
+          }
+        }
+      ]
+    },
+    {
+      "name": "📝 Demo Requests (Public)",
+      "item": [
+        {
+          "name": "Submit Demo Request",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/demo/request",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Suresh Yadav\",\n  \"agencyName\": \"Suresh Travels\",\n  \"phone\": \"9988776655\",\n  \"email\": \"suresh@sureshtra.com\"\n}"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

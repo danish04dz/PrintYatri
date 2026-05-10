@@ -1,23 +1,27 @@
-const express = require('express');
-const router = express.Router(); 
+const express = require("express");
+const router = express.Router();
+const { verifyJWT } = require("../middleware/auth");
+const { uploadUserPhoto } = require("../middleware/upload");
 
+const {
+  registerUser,
+  loginUser,
+  logoutUser,
+  getCurrentUser,
+  refreshAccessToken,
+  updateProfile,
+  uploadProfilePhoto,
+} = require("../controllers/user.controller");
 
-// importing the auth middleware and controllers
-const { registerUser, loginUser, logoutUser , getCurrentUser} = require('../controllers/user.controller');
-const { verifyJWT } = require('../middleware/auth');
+// ─── Public Routes ────────────────────────────────
+router.post("/register", registerUser);
+router.post("/login", loginUser);
+router.post("/refresh-token", refreshAccessToken); // ✅ NEW
 
-
-// user register Routes
-router.post('/register', registerUser);
-
-// login
-router.post('/login',loginUser)
-
-// logout
-router.post('/logout',verifyJWT,logoutUser)
-
-// get current user after app reload
-router.get('/me',verifyJWT,getCurrentUser)
-
+// ─── Protected Routes ────────────────────────────
+router.post("/logout", verifyJWT, logoutUser);
+router.get("/me", verifyJWT, getCurrentUser);
+router.put("/profile", verifyJWT, updateProfile);                           // ✅ NEW
+router.post("/upload-photo", verifyJWT, uploadUserPhoto, uploadProfilePhoto); // ✅ NEW (Cloudinary)
 
 module.exports = router;

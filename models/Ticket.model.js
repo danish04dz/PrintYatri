@@ -1,64 +1,96 @@
-const mongoose = require('mongoose');
-const ticketSchema = new mongoose.Schema({
+const mongoose = require("mongoose");
 
-    passengerName:{
-        type:String,
-       
-    },
-    numberPasanger :{
-        type : String,
-        required : true,
-        
-
+const ticketSchema = new mongoose.Schema(
+  {
+    passengerName: {
+      type: String,
+      trim: true,
+      default: "Passenger",
     },
 
-    ticketId : {
-        type : String,
-        required : true,
-        unique : true
-    },
-    fare:{
-        type:Number,
-        required:true
+    // ✅ FIXED: was "numberPasanger: String" — wrong name + wrong type
+    numberPassengers: {
+      type: Number,
+      required: true,
+      min: 1,
+      default: 1,
     },
 
-    route:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"Route",
-        required:true
+    ticketId: {
+      type: String,
+      required: true,
+      unique: true,
+      index: true,
     },
 
-    pickupStop:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"Stop",
-        required:true
+    fare: {
+      type: Number,
+      required: true,
+      min: 0,
     },
 
-    dropStop:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"Stop",
-        required:true
+    // ✅ NEW: per-passenger fare for reference
+    farePerPassenger: {
+      type: Number,
+      required: true,
+      min: 0,
     },
 
-    bus:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"Bus",
-        required:true
+    route: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Route",
+      required: true,
     },
 
-    conductor:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"User",
-        required:true
+    pickupStop: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Stop",
+      required: true,
     },
 
-    agency:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"Agency",
-        required:true
-    }
+    dropStop: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Stop",
+      required: true,
+    },
 
-},{timestamps:true})
+    bus: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Bus",
+      required: true,
+    },
 
+    conductor: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
 
-module.exports = mongoose.model("Ticket",ticketSchema)
+    agency: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Agency",
+      required: true,
+    },
+
+    // ✅ NEW: ticket lifecycle status
+    status: {
+      type: String,
+      enum: ["active", "cancelled", "refunded"],
+      default: "active",
+    },
+
+    // ✅ NEW: payment mode for POS
+    paymentMode: {
+      type: String,
+      enum: ["cash", "upi", "card", "free"],
+      default: "cash",
+    },
+  },
+  { timestamps: true }
+);
+
+// Index for fast conductor history queries
+ticketSchema.index({ conductor: 1, createdAt: -1 });
+ticketSchema.index({ agency: 1, createdAt: -1 });
+
+module.exports = mongoose.model("Ticket", ticketSchema);

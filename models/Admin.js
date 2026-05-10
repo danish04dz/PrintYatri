@@ -1,80 +1,70 @@
-const mongoose = require ('mongoose');
-const bcrypt = require ('bcryptjs');
-const jwt = require('jsonwebtoken');
+const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
-const adminSchema = new mongoose.Schema({
+const adminSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
+    password: {
+      type: String,
+      required: true,
+    },
+    role: {
+      type: String,
+      default: "admin",
+    },
+    refreshToken: {
+      type: String,
+      default: null,
+    },
+  },
+  { timestamps: true }
+);
 
-    name :{
-        type: String,
-        required : true
-    },
-    email : {
-        type : String,
-        required :true
-    },
-    password :{
-        type : String,
-        required : true
-    },
-    role:{
-        type : String,
-        default : "admin"
-    },
-    refreshToken : {
-        type : String
-    }
-
-},{timestamps: true})
-
-adminSchema.pre('save', async function (next) {
-    if (!this.isModified('password')) return next();
-    this.password = await bcrypt.hash(this.password, 10);
-    next();
+// Hash password before saving
+adminSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
+  this.password = await bcrypt.hash(this.password, 12);
+  next();
 });
 
-
-// Method to compare passwords
+// Compare passwords
 adminSchema.methods.isPasswordCorrect = async function (password) {
-   return await  bcrypt.compare(password,this.password)
-    
-}
+  return await bcrypt.compare(password, this.password);
+};
 
-// access token
+// Generate Access Token
+adminSchema.methods.generateAccessToken = function () {
+  return jwt.sign(
+    {
+      _id: this._id,
+      email: this.email,
+      name: this.name,
+      role: this.role,
+    },
+    process.env.ACCESS_TOKEN_SECRET,
+    { expiresIn: process.env.ACCESS_TOKEN_EXPIRY }
+  );
+};
 
-adminSchema.methods.generateAccessToken = function(){
+// Generate Refresh Token
+adminSchema.methods.generateRefreshToken = function () {
+  return jwt.sign(
+    { _id: this._id },
+    process.env.REFRESH_TOKEN_SECRET,
+    { expiresIn: process.env.REFRESH_TOKEN_EXPIRY }
+  );
+};
 
-    return  jwt.sign(
-        {
-            _id :this._id,
-            email : this.email,
-            name : this.name,
-            role : this.role
-        },
-        process.env.ACCESS_TOKEN_SECRET,
-        {
-            expiresIn : process.env.ACCESS_TOKEN_EXPIRY
-        }
-    )
-    
-}
-adminSchema.methods.generateRefreshToken = function(){
-     return  jwt.sign(
-        {
-            _id :this._id,
-            
-        },
-        process.env.REFRESH_TOKEN_SECRET,
-        {
-            expiresIn : process.env.REFRESH_TOKEN_EXPIRY
-        }
-    )
-    
-}
-
-
-
-
-
-
-
-module.exports = mongoose.model("Admin",adminSchema);
+module.exports = mongoose.model("Admin", adminSchema);

@@ -1,32 +1,49 @@
-const mongoose =require ('mongoose');
-const bcrypt = require ('bcrypt');
-const Admin = require ("./models/Admin");
-require ('dotenv').config();
+/**
+ * createAdmin.js — Run this ONCE to seed the admin account
+ * Usage: node createAdmin.js
+ *
+ * The Admin model's pre('save') hook handles password hashing automatically.
+ * DO NOT manually hash the password here — that causes double-hashing.
+ */
 
-mongoose.connect(process.env.MONGODB_URI,)
-.then(async () => {
-    console.log("Connected to MongoDB");
-    
-    // Check if admin already exists
-    const existingAdmin = await Admin.findOne({ email: process.env.ADMIN_EMAIL });
+const mongoose = require("mongoose");
+const Admin = require("./models/Admin");
+require("dotenv").config();
+
+mongoose
+  .connect(process.env.MONGODB_URI)
+  .then(async () => {
+    console.log("✅ Connected to MongoDB");
+
+    const existingAdmin = await Admin.findOne({
+      email: process.env.ADMIN_EMAIL,
+    });
+
     if (existingAdmin) {
-        console.log("Admin already exists. Skipping creation.");
-        return;
+      console.log("⚠️  Admin already exists:", existingAdmin.email);
+      console.log("   To reset password, delete the admin doc and re-run.");
+      return;
     }
 
-    // Create a new admin
-    const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10);
+    // ✅ FIXED: Let the model's pre('save') hook hash the password.
+    // Do NOT call bcrypt.hash() manually here.
     const newAdmin = new Admin({
-        name: process.env.ADMIN_NAME,
-        email: process.env.ADMIN_EMAIL,
-        password: hashedPassword,
-        role: "admin"
+      name: process.env.ADMIN_NAME?.trim() || "Admin",
+      email: process.env.ADMIN_EMAIL?.toLowerCase().trim(),
+      password: process.env.ADMIN_PASSWORD, // plain — model will hash it
+      role: "admin",
     });
 
     await newAdmin.save();
-    console.log("Admin created successfully");
-}).catch(err => {
-    console.error("Error connecting to MongoDB or creating admin:", err);
-}).finally(() => {
+    console.log("🎉 Admin created successfully!");
+    console.log("   Email   :", newAdmin.email);
+    console.log("   Name    :", newAdmin.name);
+    console.log("   Login at: POST /api/admin/login");
+  })
+  .catch((err) => {
+    console.error("❌ Error:", err.message);
+  })
+  .finally(() => {
     mongoose.connection.close();
-});
+    console.log("🔌 MongoDB connection closed.");
+  });

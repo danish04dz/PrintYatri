@@ -1,14 +1,23 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
+const { verifyJWT, isConductor } = require("../middleware/auth");
 
-// import auth
-const { isConductor, verifyJWT } = require('../middleware/auth');
+const {
+  getRoutesAndStops,
+  generateTicket,
+  getConductorTickets,
+  getDashboardStats,
+  getConductorProfile,
+} = require("../controllers/conductor.controller");
 
-// import controller
-const { getRoutesAndSTops, generateTicket } = require('../controllers/conductor.controller');
+// ─── All routes require conductor auth ───────────
+router.get("/routes", verifyJWT, isConductor, getRoutesAndStops);      // alias
+router.get("/getRoutesAndStops", verifyJWT, isConductor, getRoutesAndStops); // legacy compat
 
-// create routes
-router.get('/getRoutesAndStops', verifyJWT, isConductor, getRoutesAndSTops);
-router.post('/generateTicket', verifyJWT,isConductor, generateTicket)
+router.post("/generateTicket", verifyJWT, isConductor, generateTicket);
+
+router.get("/tickets", verifyJWT, isConductor, getConductorTickets);   // ✅ NEW (moved here)
+router.get("/stats", verifyJWT, isConductor, getDashboardStats);        // ✅ NEW
+router.get("/profile", verifyJWT, isConductor, getConductorProfile);    // ✅ NEW
 
 module.exports = router;

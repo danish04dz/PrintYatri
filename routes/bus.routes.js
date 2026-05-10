@@ -1,16 +1,15 @@
-const express = require('express');
-const { getAllConductorsAndBusData,getRoutesWithBus, getConductorTickets} = require('../controllers/bus.controller');
-const { isAgency, verifyJWT, isConductor } = require('../middleware/auth');
-const router = express.Router(); 
- 
+const express = require("express");
+const router = express.Router();
+const { verifyJWT, isAgency, isAgencyOrAdmin } = require("../middleware/auth");
+const {
+  getAllConductorsAndBusData,
+  getRoutesWithBus,
+} = require("../controllers/bus.controller");
 
-router.get('/getConductorsAndBusses',verifyJWT,isAgency,getAllConductorsAndBusData) 
+// ─── Agency/Admin Data Routes ─────────────────────
+router.get("/getConductorsAndBusses", verifyJWT, isAgency, getAllConductorsAndBusData);
+router.get("/getRoutes", verifyJWT, isAgencyOrAdmin, getRoutesWithBus);
 
-router.get('/getRoutes',verifyJWT,isAgency,getRoutesWithBus)
-
-router.get('/tickets',verifyJWT,isConductor,getConductorTickets);
-
-
-
+// NOTE: /tickets moved to /api/conductor/tickets (correct namespace)
 
 module.exports = router;

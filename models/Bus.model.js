@@ -1,39 +1,58 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const busSchema = new mongoose.Schema({
+const busSchema = new mongoose.Schema(
+  {
     busNumber: {
-        type: String,
-        required: true,
-        unique: true,
-        uppercase:true,   // ✅ automatically uppercase
-        
-        match: [/^[A-Z]{2} [0-9]{2} [A-Z]{2} [0-9]{4}$/, "Invalid Bus Number Format"]
+      type: String,
+      required: true,
+      unique: true,
+      uppercase: true,
+      trim: true,
+      match: [
+        /^[A-Z]{2}\s?[0-9]{2}\s?[A-Z]{1,2}\s?[0-9]{4}$/,
+        "Invalid Bus Number Format (e.g. UP 32 AB 1234)",
+      ],
     },
-    busName:{
-        type: String,
-        required: true
+
+    busName: {
+      type: String,
+      required: true,
+      trim: true,
     },
-    
+
     totalSeats: {
-        type: Number,   
-        required: true,
+      type: Number,
+      required: true,
+      min: 1,
     },
- agency:{
-        type: mongoose.Schema.Types.ObjectId,
-        ref:"Agency"
+
+    agency: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Agency",
+      required: true,
     },
- 
-   
-    // Relationship with Conductor
+
     assignedConductor: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    default: null
-},
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
 
-  
+    // ✅ NEW: bus type for POS display
+    busType: {
+      type: String,
+      enum: ["AC", "Non-AC", "Sleeper", "Semi-Sleeper"],
+      default: "Non-AC",
+    },
 
-   
-},{timestamps: true});
+    // ✅ NEW: soft delete
+    isActive: {
+      type: Boolean,
+      default: true,
+      index: true,
+    },
+  },
+  { timestamps: true }
+);
 
 module.exports = mongoose.model("Bus", busSchema);
