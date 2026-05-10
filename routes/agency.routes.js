@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { verifyJWT, isAgency } = require("../middleware/auth");
+const { verifyJWT, isAgency, requireProPlan } = require("../middleware/auth");
 const { uploadConductorPhoto, uploadAgencyLogo, uploadAdvertiseImage } = require("../middleware/upload");
 
 const {
@@ -71,14 +71,15 @@ router.delete("/remove-logo", verifyJWT, isAgency, removeAgencyLogo);
 // Ticket History (Agency-level)
 router.get("/tickets", verifyJWT, isAgency, getAgencyTickets); // ✅ NEW
 
-// Advertise Image (Local Shop Ad on Ticket)
+// Advertise Image (Local Shop Ad on Ticket) — PRO PLAN ONLY
 router.post(
   "/upload-advertise",
   verifyJWT,
   isAgency,
+  requireProPlan,
   uploadAdvertiseImage,
   uploadAdvertiseImageCtrl
 );
-router.delete("/remove-advertise", verifyJWT, isAgency, removeAdvertiseImage);
+router.delete("/remove-advertise", verifyJWT, isAgency, requireProPlan, removeAdvertiseImage);
 
 module.exports = router;

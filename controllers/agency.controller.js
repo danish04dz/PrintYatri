@@ -354,6 +354,8 @@ exports.registerConductor = async (req, res, next) => {
       success: true,
       message: "Conductor registered successfully",
       conductor: created,
+      // Plain-text credentials shown once — agency owner must share with conductor
+      credentials: { phone, password },
     });
   } catch (error) {
     next(error);

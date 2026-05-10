@@ -134,7 +134,7 @@ exports.loginUser = async (req, res, next) => {
 
     const loggedInUser = await User.findById(user._id)
       .select("-password -refreshToken")
-      .populate("agency", "agencyName status logo phone city")
+      .populate("agency", "agencyName status subscriptionPlan maxBuses logo phone city advertiseImage")
       .populate("assignedBus", "busNumber busName busType totalSeats");
 
     return res
@@ -180,7 +180,7 @@ exports.getCurrentUser = async (req, res, next) => {
   try {
     const user = await User.findById(req.user._id)
       .select("-password -refreshToken")
-      .populate("agency", "agencyName status logo phone city advertiseImage")
+      .populate("agency", "agencyName status subscriptionPlan maxBuses logo phone city advertiseImage")
       .populate("assignedBus", "busNumber busName busType totalSeats");
 
     if (!user) {

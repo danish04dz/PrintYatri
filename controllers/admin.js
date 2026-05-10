@@ -107,6 +107,8 @@ exports.getDashboardStats = async (req, res, next) => {
       totalAgencies,
       activeAgencies,
       pendingAgencies,
+      suspendedAgencies,
+      proPlanAgencies,
       totalUsers,
       totalConductors,
       pendingDemoRequests,
@@ -115,18 +117,14 @@ exports.getDashboardStats = async (req, res, next) => {
       Agency.countDocuments(),
       Agency.countDocuments({ status: "approved" }),
       Agency.countDocuments({ status: "pending" }),
+      Agency.countDocuments({ status: "suspended" }),
+      Agency.countDocuments({ subscriptionPlan: "paid" }),
       User.countDocuments({ role: { $ne: "admin" } }),
       User.countDocuments({ role: "conductor" }),
       DemoRequest.countDocuments({ status: "pending" }),
       Ticket.aggregate([
         { $match: { status: "active" } },
-        {
-          $group: {
-            _id: null,
-            totalRevenue: { $sum: "$fare" },
-            totalTickets: { $sum: 1 },
-          },
-        },
+        { $group: { _id: null, totalRevenue: { $sum: "$fare" }, totalTickets: { $sum: 1 } } },
       ]),
     ]);
 
@@ -135,21 +133,8 @@ exports.getDashboardStats = async (req, res, next) => {
 
     // Revenue trend — last 7 days
     const last7Days = await Ticket.aggregate([
-      {
-        $match: {
-          status: "active",
-          createdAt: {
-            $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-          },
-        },
-      },
-      {
-        $group: {
-          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-          revenue: { $sum: "$fare" },
-          tickets: { $sum: 1 },
-        },
-      },
+      { $match: { status: "active", createdAt: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } } },
+      { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } }, revenue: { $sum: "$fare" }, tickets: { $sum: 1 } } },
       { $sort: { _id: 1 } },
     ]);
 
@@ -159,6 +144,8 @@ exports.getDashboardStats = async (req, res, next) => {
         totalAgencies,
         activeAgencies,
         pendingAgencies,
+        suspendedAgencies,
+        proPlanAgencies,
         totalUsers,
         totalConductors,
         pendingDemoRequests,

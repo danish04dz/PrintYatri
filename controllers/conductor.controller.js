@@ -78,10 +78,21 @@ exports.generateTicket = async (req, res, next) => {
     }
 
     // Get conductor with bus and agency
-    const conductor = await User.findById(req.user._id).populate("assignedBus agency");
+    const conductor = await User.findById(req.user._id)
+      .populate("assignedBus")
+      .populate("agency", "status subscriptionPlan trialExpiresAt agencyName logo advertiseImage");
 
     if (!conductor) {
       return res.status(404).json({ success: false, message: "Conductor not found" });
+    }
+
+    // Conductor inactive check
+    if (conductor.isActive === false) {
+      return res.status(403).json({
+        success: false,
+        isInactive: true,
+        message: "Your account has been deactivated. Contact your agency admin.",
+      });
     }
 
     if (!conductor.assignedBus) {
