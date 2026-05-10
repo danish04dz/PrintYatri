@@ -336,7 +336,7 @@ exports.getAllDemoRequests = async (req, res, next) => {
 exports.updateDemoRequestStatus = async (req, res, next) => {
   try {
     const { requestId } = req.params;
-    const { status, notes } = req.body;
+    const { status, notes } = req.body || {};
 
     const validStatuses = ["pending", "contacted", "demo_done", "rejected"];
     if (status && !validStatuses.includes(status)) {

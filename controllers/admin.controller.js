@@ -141,7 +141,7 @@ exports.upgradePlan = async (req, res, next) => {
 exports.suspendAgency = async (req, res, next) => {
   try {
     const { agencyId } = req.params;
-    const { reason } = req.body;
+    const { reason } = req.body || {};
 
     const agency = await Agency.findByIdAndUpdate(
       agencyId,
