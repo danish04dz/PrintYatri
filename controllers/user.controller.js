@@ -180,7 +180,7 @@ exports.getCurrentUser = async (req, res, next) => {
   try {
     const user = await User.findById(req.user._id)
       .select("-password -refreshToken")
-      .populate("agency", "agencyName status logo phone city")
+      .populate("agency", "agencyName status logo phone city advertiseImage")
       .populate("assignedBus", "busNumber busName busType totalSeats");
 
     if (!user) {
@@ -314,6 +314,27 @@ exports.uploadProfilePhoto = async (req, res, next) => {
       success: true,
       message: "Profile photo updated",
       profileImage: imageUrl,
+      user,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ─────────────────────────────────────────────────
+// Remove Profile Photo (self)
+// ─────────────────────────────────────────────────
+exports.removeProfilePhoto = async (req, res, next) => {
+  try {
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { profileImage: null },
+      { new: true }
+    ).select("-password -refreshToken");
+
+    return res.status(200).json({
+      success: true,
+      message: "Profile photo removed",
       user,
     });
   } catch (error) {

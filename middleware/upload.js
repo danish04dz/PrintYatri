@@ -27,7 +27,7 @@ const conductorStorage = new CloudinaryStorage({
     allowed_formats: allowedFormats,
     transformation: [{ width: 400, height: 400, crop: "fill", quality: "auto" }],
     public_id: (req, file) =>
-      `conductor_${req.params.id || req.user._id}_${Date.now()}`,
+      `conductor_${req.params.id || String(req.user._id)}_${Date.now()}`,
   },
 });
 
@@ -41,7 +41,7 @@ const agencyStorage = new CloudinaryStorage({
     allowed_formats: allowedFormats,
     transformation: [{ width: 500, height: 500, crop: "fill", quality: "auto" }],
     public_id: (req, file) =>
-      `agency_${req.user._id}_${Date.now()}`,
+      `agency_${String(req.user._id)}_${Date.now()}`,
   },
 });
 
@@ -54,7 +54,7 @@ const userStorage = new CloudinaryStorage({
     folder: "printyatri/users",
     allowed_formats: allowedFormats,
     transformation: [{ width: 400, height: 400, crop: "fill", quality: "auto" }],
-    public_id: (req, file) => `user_${req.user._id}_${Date.now()}`,
+    public_id: (req, file) => `user_${String(req.user._id)}_${Date.now()}`,
   },
 });
 
@@ -80,7 +80,7 @@ const advertiseStorage = new CloudinaryStorage({
     folder: "printyatri/advertise",
     allowed_formats: allowedFormats,
     transformation: [{ width: 600, height: 200, crop: "fill", quality: "auto" }],
-    public_id: (req, file) => `advertise_${req.user._id}_${Date.now()}`,
+    public_id: (req, file) => `advertise_${String(req.user._id)}_${Date.now()}`,
   },
 });
 

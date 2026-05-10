@@ -11,6 +11,7 @@ const {
   refreshAccessToken,
   updateProfile,
   uploadProfilePhoto,
+  removeProfilePhoto,
 } = require("../controllers/user.controller");
 
 // ─── Public Routes ────────────────────────────────
@@ -23,5 +24,6 @@ router.post("/logout", verifyJWT, logoutUser);
 router.get("/me", verifyJWT, getCurrentUser);
 router.put("/profile", verifyJWT, updateProfile);                           // ✅ NEW
 router.post("/upload-photo", verifyJWT, uploadUserPhoto, uploadProfilePhoto); // ✅ NEW (Cloudinary)
+router.delete("/remove-photo", verifyJWT, removeProfilePhoto); // ✅ NEW
 
 module.exports = router;

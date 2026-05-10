@@ -744,6 +744,28 @@ exports.uploadAgencyLogo = async (req, res, next) => {
 };
 
 // ─────────────────────────────────────────────────
+// Remove Agency Logo
+// ─────────────────────────────────────────────────
+exports.removeAgencyLogo = async (req, res, next) => {
+  try {
+    const agency = await getAgencyForOwner(req.user._id);
+    if (!agency) {
+      return res.status(404).json({ success: false, message: "Agency not found" });
+    }
+
+    agency.logo = null;
+    await agency.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Agency logo removed",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ─────────────────────────────────────────────────
 // Upload Advertise Image — ✅ NEW
 // ─────────────────────────────────────────────────
 exports.uploadAdvertiseImage = async (req, res, next) => {
@@ -765,6 +787,56 @@ exports.uploadAdvertiseImage = async (req, res, next) => {
       success: true,
       message: "Advertisement image uploaded successfully",
       advertiseImage: imageUrl,
+    });
+  } catch (error) {
+    console.error("uploadAdvertiseImage error:", error);
+    next(error);
+  }
+};
+
+// ─────────────────────────────────────────────────
+// Remove Advertise Image
+// ─────────────────────────────────────────────────
+exports.removeAdvertiseImage = async (req, res, next) => {
+  try {
+    const agency = await getAgencyForOwner(req.user._id);
+    if (!agency) {
+      return res.status(404).json({ success: false, message: "Agency not found" });
+    }
+
+    agency.advertiseImage = null;
+    await agency.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Advertisement image removed successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ─────────────────────────────────────────────────
+// Update Agency Details
+// ─────────────────────────────────────────────────
+exports.updateAgencyProfile = async (req, res, next) => {
+  try {
+    const { agencyName, phone, city } = req.body;
+    const agency = await getAgencyForOwner(req.user._id);
+    if (!agency) {
+      return res.status(404).json({ success: false, message: "Agency not found" });
+    }
+
+    if (agencyName) agency.agencyName = agencyName;
+    if (phone) agency.phone = phone;
+    if (city) agency.city = city;
+
+    await agency.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Agency details updated",
+      agency,
     });
   } catch (error) {
     next(error);

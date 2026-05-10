@@ -19,8 +19,15 @@ const {
   getAgencyTickets,
   uploadConductorPhoto: uploadConductorPhotoCtrl,
   uploadAgencyLogo: uploadAgencyLogoCtrl,
+  removeAgencyLogo,
   uploadAdvertiseImage: uploadAdvertiseImageCtrl,
+  removeAdvertiseImage,
+  updateAgencyProfile,
 } = require("../controllers/agency.controller");
+
+// ... later in the file ...
+router.patch("/update-profile", verifyJWT, isAgency, updateAgencyProfile);
+
 
 // ─── All routes require agency auth ──────────────
 
@@ -59,6 +66,7 @@ router.post(                                                                    
   uploadAgencyLogo,
   uploadAgencyLogoCtrl
 );
+router.delete("/remove-logo", verifyJWT, isAgency, removeAgencyLogo);
 
 // Ticket History (Agency-level)
 router.get("/tickets", verifyJWT, isAgency, getAgencyTickets); // ✅ NEW
@@ -71,5 +79,6 @@ router.post(
   uploadAdvertiseImage,
   uploadAdvertiseImageCtrl
 );
+router.delete("/remove-advertise", verifyJWT, isAgency, removeAdvertiseImage);
 
 module.exports = router;
