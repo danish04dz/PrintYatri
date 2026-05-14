@@ -29,3 +29,7 @@ coverage/
 # Optional: Ignore IDE specific files
 .vscode/
 .idea/
+
+# Postman
+*.postman_collection.json
+*.postman_environment.json

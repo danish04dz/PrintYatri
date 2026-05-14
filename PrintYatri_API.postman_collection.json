@@ -67,29 +67,6 @@
           }
         },
         {
-          "name": "Login Conductor",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "const res = pm.response.json();",
-                  "if (res.accessToken) { pm.collectionVariables.set('conductorToken', res.accessToken); }"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "url": "{{baseUrl}}/user/login",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"phone\": \"9123456780\",\n  \"password\": \"Conductor@123\"\n}"
-            }
-          }
-        },
-        {
           "name": "Get Current User (me)",
           "request": {
             "method": "GET",
@@ -137,6 +114,14 @@
           }
         },
         {
+          "name": "Remove Profile Photo",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{conductorToken}}" }],
+            "url": "{{baseUrl}}/user/remove-photo"
+          }
+        },
+        {
           "name": "Logout",
           "request": {
             "method": "POST",
@@ -173,6 +158,14 @@
           }
         },
         {
+          "name": "Admin Stream Agencies (SSE)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/admin/stream/agencies?token={{adminToken}}",
+            "description": "Server-Sent Events (SSE) stream for real-time dashboard updates"
+          }
+        },
+        {
           "name": "Admin Dashboard",
           "request": {
             "method": "GET",
@@ -204,7 +197,7 @@
           }
         },
         {
-          "name": "Create Agency (for existing user)",
+          "name": "Create Agency",
           "event": [
             {
               "listen": "test",
@@ -225,22 +218,7 @@
             "url": "{{baseUrl}}/admin/create-agency",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"rajesh@example.com\",\n  \"agencyName\": \"Rajesh Travels\",\n  \"agencyAddress\": \"Gorakhpur, UP\",\n  \"city\": \"Gorakhpur\",\n  \"agencyPhone\": \"9876543210\",\n  \"agencyEmail\": \"info@rakeshtravels.com\",\n  \"licenseNumber\": \"UP-32-2024-001\"\n}"
-            }
-          }
-        },
-        {
-          "name": "Update Agency Status",
-          "request": {
-            "method": "PUT",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
-            ],
-            "url": "{{baseUrl}}/admin/agencies/{{agencyId}}",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"status\": \"approved\",\n  \"subscriptionPlan\": \"paid\"\n}"
+              "raw": "{\n  \"ownerName\": \"Rajesh Kumar\",\n  \"phone\": \"9876543210\",\n  \"password\": \"Test@123\",\n  \"agencyName\": \"Rajesh Travels\",\n  \"address\": \"Gorakhpur, UP\",\n  \"city\": \"Gorakhpur\",\n  \"licenseNumber\": \"UP-32-2024-001\"\n}"
             }
           }
         },
@@ -256,6 +234,31 @@
             "body": {
               "mode": "raw",
               "raw": "{\n  \"reason\": \"Pending document verification\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Unsuspend Agency",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/admin/agencies/{{agencyId}}/unsuspend"
+          }
+        },
+        {
+          "name": "Upgrade Agency Plan",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/admin/agencies/{{agencyId}}/upgrade-plan",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subscriptionPlan\": \"paid\"\n}"
             }
           }
         },
@@ -289,7 +292,7 @@
             "url": {
               "raw": "{{baseUrl}}/admin/tickets?filter=today&page=1&limit=30",
               "query": [
-                { "key": "filter", "value": "today", "description": "today | week | month | all" },
+                { "key": "filter", "value": "today" },
                 { "key": "page", "value": "1" },
                 { "key": "limit", "value": "30" }
               ]
@@ -318,7 +321,7 @@
             "url": "{{baseUrl}}/admin/demo-requests/<requestId>",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"status\": \"contacted\",\n  \"notes\": \"Called on 04-May. Interested in paid plan.\"\n}"
+              "raw": "{\n  \"status\": \"contacted\",\n  \"notes\": \"Interested in PRO plan.\"\n}"
             }
           }
         }
@@ -333,6 +336,21 @@
             "method": "GET",
             "header": [{ "key": "Authorization", "value": "Bearer {{agencyToken}}" }],
             "url": "{{baseUrl}}/agency/stats"
+          }
+        },
+        {
+          "name": "Update Agency Profile",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{agencyToken}}" }
+            ],
+            "url": "{{baseUrl}}/agency/update-profile",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"agencyName\": \"Gorakhnath Travels\",\n  \"city\": \"Gorakhpur\"\n}"
+            }
           }
         },
         {
@@ -506,7 +524,7 @@
             "url": "{{baseUrl}}/agency/conductors/{{conductorId}}/upload-photo",
             "body": {
               "mode": "formdata",
-              "formdata": [{ "key": "photo", "type": "file", "src": "", "description": "Conductor profile image (jpg/png/webp, max 5MB)" }]
+              "formdata": [{ "key": "photo", "type": "file", "src": "" }]
             }
           }
         },
@@ -518,8 +536,36 @@
             "url": "{{baseUrl}}/agency/upload-logo",
             "body": {
               "mode": "formdata",
-              "formdata": [{ "key": "logo", "type": "file", "src": "", "description": "Agency logo or owner photo (jpg/png/webp, max 5MB)" }]
+              "formdata": [{ "key": "logo", "type": "file", "src": "" }]
             }
+          }
+        },
+        {
+          "name": "Remove Agency Logo",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{agencyToken}}" }],
+            "url": "{{baseUrl}}/agency/remove-logo"
+          }
+        },
+        {
+          "name": "Upload Advertise Image (PRO)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{agencyToken}}" }],
+            "url": "{{baseUrl}}/agency/upload-advertise",
+            "body": {
+              "mode": "formdata",
+              "formdata": [{ "key": "advertise", "type": "file", "src": "" }]
+            }
+          }
+        },
+        {
+          "name": "Remove Advertise Image",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{agencyToken}}" }],
+            "url": "{{baseUrl}}/agency/remove-advertise"
           }
         },
         {
@@ -530,11 +576,9 @@
             "url": {
               "raw": "{{baseUrl}}/agency/tickets?filter=today&page=1&limit=30",
               "query": [
-                { "key": "filter", "value": "today", "description": "today | yesterday | week | month | all" },
+                { "key": "filter", "value": "today" },
                 { "key": "page", "value": "1" },
-                { "key": "limit", "value": "30" },
-                { "key": "conductorId", "value": "", "disabled": true },
-                { "key": "busId", "value": "", "disabled": true }
+                { "key": "limit", "value": "30" }
               ]
             }
           }
@@ -589,7 +633,7 @@
             "header": [{ "key": "Authorization", "value": "Bearer {{conductorToken}}" }],
             "url": {
               "raw": "{{baseUrl}}/conductor/tickets?filter=today",
-              "query": [{ "key": "filter", "value": "today", "description": "today | yesterday | week | month | all" }]
+              "query": [{ "key": "filter", "value": "today" }]
             }
           }
         },
@@ -618,27 +662,6 @@
             "method": "GET",
             "header": [{ "key": "Authorization", "value": "Bearer {{conductorToken}}" }],
             "url": "{{baseUrl}}/conductor/profile"
-          }
-        }
-      ]
-    },
-    {
-      "name": "📊 Agency Dashboard Data",
-      "item": [
-        {
-          "name": "Get Conductors & Buses Overview",
-          "request": {
-            "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{agencyToken}}" }],
-            "url": "{{baseUrl}}/data/getConductorsAndBusses"
-          }
-        },
-        {
-          "name": "Get Routes with Stops",
-          "request": {
-            "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{agencyToken}}" }],
-            "url": "{{baseUrl}}/data/getRoutes"
           }
         }
       ]
