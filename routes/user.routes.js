@@ -23,6 +23,7 @@ router.post("/refresh-token", refreshAccessToken); // ✅ NEW
 router.post("/logout", verifyJWT, logoutUser);
 router.get("/me", verifyJWT, getCurrentUser);
 router.put("/profile", verifyJWT, updateProfile);                           // ✅ NEW
+router.patch("/update-profile", verifyJWT, updateProfile);                  // ✅ alias used by client
 router.post("/upload-photo", verifyJWT, uploadUserPhoto, uploadProfilePhoto); // ✅ NEW (Cloudinary)
 router.delete("/remove-photo", verifyJWT, removeProfilePhoto); // ✅ NEW
 
