@@ -1,6 +1,6 @@
 const cloudinary = require("cloudinary").v2;
-const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const multer = require("multer");
+const { Readable } = require("stream");
 
 // ─────────────────────────────────────────────────
 // Cloudinary Configuration
@@ -13,76 +13,10 @@ cloudinary.config({
 });
 
 // ─────────────────────────────────────────────────
-// Allowed file types
+// Use memory storage — files held in buffer, then
+// streamed directly to Cloudinary v2 API
 // ─────────────────────────────────────────────────
-const allowedFormats = ["jpg", "jpeg", "png", "webp"];
-
-// ─────────────────────────────────────────────────
-// Storage: Conductor Profile Photos
-// ─────────────────────────────────────────────────
-const conductorStorage = new CloudinaryStorage({
-  cloudinary,
-  params: {
-    folder: "printyatri/conductors",
-    allowed_formats: allowedFormats,
-    transformation: [{ width: 400, height: 400, crop: "fill", quality: "auto" }],
-    public_id: (req, file) =>
-      `conductor_${req.params.id || String(req.user._id)}_${Date.now()}`,
-  },
-});
-
-// ─────────────────────────────────────────────────
-// Storage: Agency Logo / Owner Photo
-// ─────────────────────────────────────────────────
-const agencyStorage = new CloudinaryStorage({
-  cloudinary,
-  params: {
-    folder: "printyatri/agencies",
-    allowed_formats: allowedFormats,
-    transformation: [{ width: 500, height: 500, crop: "fill", quality: "auto" }],
-    public_id: (req, file) =>
-      `agency_${String(req.user._id)}_${Date.now()}`,
-  },
-});
-
-// ─────────────────────────────────────────────────
-// Storage: User Self-Upload (conductor own photo)
-// ─────────────────────────────────────────────────
-const userStorage = new CloudinaryStorage({
-  cloudinary,
-  params: {
-    folder: "printyatri/users",
-    allowed_formats: allowedFormats,
-    transformation: [{ width: 400, height: 400, crop: "fill", quality: "auto" }],
-    public_id: (req, file) => `user_${String(req.user._id)}_${Date.now()}`,
-  },
-});
-
-// ─────────────────────────────────────────────────
-// Storage: Company Assets (Blogs, Team)
-// ─────────────────────────────────────────────────
-const companyStorage = new CloudinaryStorage({
-  cloudinary,
-  params: {
-    folder: "printyatri/company",
-    allowed_formats: allowedFormats,
-    transformation: [{ width: 1000, quality: "auto" }],
-    public_id: (req, file) => `company_${Date.now()}`,
-  },
-});
-
-// ─────────────────────────────────────────────────
-// Storage: Local Shop Advertisement (on ticket bottom)
-// ─────────────────────────────────────────────────
-const advertiseStorage = new CloudinaryStorage({
-  cloudinary,
-  params: {
-    folder: "printyatri/advertise",
-    allowed_formats: allowedFormats,
-    transformation: [{ width: 600, height: 200, crop: "fill", quality: "auto" }],
-    public_id: (req, file) => `advertise_${String(req.user._id)}_${Date.now()}`,
-  },
-});
+const memoryStorage = multer.memoryStorage();
 
 // ─────────────────────────────────────────────────
 // File filter — reject non-images
@@ -95,40 +29,101 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-// ─────────────────────────────────────────────────
-// Multer instances
-// ─────────────────────────────────────────────────
 const limits = { fileSize: 5 * 1024 * 1024 }; // 5MB
 
-const uploadConductorPhoto = multer({
-  storage: conductorStorage,
-  fileFilter,
-  limits,
-}).single("photo");
+// ─────────────────────────────────────────────────
+// Helper: stream a buffer to Cloudinary v2
+// ─────────────────────────────────────────────────
+function uploadToCloudinary(buffer, options) {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(options, (error, result) => {
+      if (error) return reject(error);
+      resolve(result);
+    });
+    const readable = new Readable();
+    readable.push(buffer);
+    readable.push(null);
+    readable.pipe(uploadStream);
+  });
+}
 
-const uploadAgencyLogo = multer({
-  storage: agencyStorage,
-  fileFilter,
-  limits,
-}).single("logo");
+// ─────────────────────────────────────────────────
+// Middleware factory: wraps multer + cloudinary upload
+// ─────────────────────────────────────────────────
+function makeUploadMiddleware(fieldName, cloudinaryOptions) {
+  const upload = multer({ storage: memoryStorage, fileFilter, limits }).single(fieldName);
 
-const uploadUserPhoto = multer({
-  storage: userStorage,
-  fileFilter,
-  limits,
-}).single("photo");
+  return async (req, res, next) => {
+    upload(req, res, async (err) => {
+      if (err) return next(err);
+      if (!req.file) return next(); // no file uploaded — let route handle it
 
-const uploadCompanyImage = multer({
-  storage: companyStorage,
-  fileFilter,
-  limits,
-}).single("image");
+      try {
+        // Build public_id dynamically (same logic as before)
+        const publicId =
+          typeof cloudinaryOptions.public_id === "function"
+            ? cloudinaryOptions.public_id(req, req.file)
+            : cloudinaryOptions.public_id;
 
-const uploadAdvertiseImage = multer({
-  storage: advertiseStorage,
-  fileFilter,
-  limits,
-}).single("advertise");
+        const result = await uploadToCloudinary(req.file.buffer, {
+          folder: cloudinaryOptions.folder,
+          allowed_formats: cloudinaryOptions.allowed_formats || ["jpg", "jpeg", "png", "webp"],
+          transformation: cloudinaryOptions.transformation,
+          public_id: publicId,
+        });
+
+        // Attach Cloudinary result to req.file so controllers can read it
+        req.file.cloudinary = result;
+        req.file.path = result.secure_url;      // drop-in compat with old storage
+        req.file.filename = result.public_id;   // drop-in compat with old storage
+
+        next();
+      } catch (uploadErr) {
+        next(uploadErr);
+      }
+    });
+  };
+}
+
+// ─────────────────────────────────────────────────
+// Upload Middlewares (same API surface as before)
+// ─────────────────────────────────────────────────
+
+const uploadConductorPhoto = makeUploadMiddleware("photo", {
+  folder: "printyatri/conductors",
+  allowed_formats: ["jpg", "jpeg", "png", "webp"],
+  transformation: [{ width: 400, height: 400, crop: "fill", quality: "auto" }],
+  public_id: (req) =>
+    `conductor_${req.params.id || String(req.user._id)}_${Date.now()}`,
+});
+
+const uploadAgencyLogo = makeUploadMiddleware("logo", {
+  folder: "printyatri/agencies",
+  allowed_formats: ["jpg", "jpeg", "png", "webp"],
+  transformation: [{ width: 500, height: 500, crop: "fill", quality: "auto" }],
+  public_id: (req) => `agency_${String(req.user._id)}_${Date.now()}`,
+});
+
+const uploadUserPhoto = makeUploadMiddleware("photo", {
+  folder: "printyatri/users",
+  allowed_formats: ["jpg", "jpeg", "png", "webp"],
+  transformation: [{ width: 400, height: 400, crop: "fill", quality: "auto" }],
+  public_id: (req) => `user_${String(req.user._id)}_${Date.now()}`,
+});
+
+const uploadCompanyImage = makeUploadMiddleware("image", {
+  folder: "printyatri/company",
+  allowed_formats: ["jpg", "jpeg", "png", "webp"],
+  transformation: [{ width: 1000, quality: "auto" }],
+  public_id: () => `company_${Date.now()}`,
+});
+
+const uploadAdvertiseImage = makeUploadMiddleware("advertise", {
+  folder: "printyatri/advertise",
+  allowed_formats: ["jpg", "jpeg", "png", "webp"],
+  transformation: [{ width: 600, height: 200, crop: "fill", quality: "auto" }],
+  public_id: (req) => `advertise_${String(req.user._id)}_${Date.now()}`,
+});
 
 // ─────────────────────────────────────────────────
 // Exports
