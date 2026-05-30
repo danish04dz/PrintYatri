@@ -1,7 +1,6 @@
 const cloudinary = require("cloudinary").v2;
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const multer = require("multer");
-const { Readable } = require("stream");
 
 // ─────────────────────────────────────────────────
 // Cloudinary Configuration
@@ -53,103 +52,23 @@ const fileFilter = (req, file, cb) => {
 const limits = { fileSize: 5 * 1024 * 1024 }; // 5 MB
 
 // ─────────────────────────────────────────────────
-// fixMultipartBoundary
-//
-// ROOT CAUSE of React Native upload failures:
-//
-// The React Native client sets:
-//   headers: { "Content-Type": "multipart/form-data" }
-//
-// Axios passes that header as-is to React Native's XHR.
-// React Native XHR adds the boundary to the actual byte-stream
-// but does NOT update the Content-Type header string — so the
-// server receives:
-//   Content-Type: multipart/form-data          ← no boundary!
-//
-// Multer v2 uses the `type-is` package which checks the
-// Content-Type header. When it sees "multipart/form-data"
-// WITHOUT a boundary it treats the request as non-multipart
-// and skips processing entirely → req.file stays undefined
-// → controller returns "No image provided".
-//
-// Fix: peek at the first chunk of the raw body, extract the
-// real boundary string (e.g. --abc123), and patch the header
-// BEFORE multer runs.  This is safe because we re-assemble
-// the stream from the buffered chunk + the rest of the socket.
-// ─────────────────────────────────────────────────
-function fixMultipartBoundary(req, res, next) {
-  const contentType = req.headers["content-type"] || "";
-
-  // Only patch when the header says multipart but has no boundary
-  const isMultipart = contentType.includes("multipart/form-data");
-  const hasBoundary = contentType.includes("boundary=");
-
-  if (!isMultipart || hasBoundary) {
-    return next(); // header is already correct — nothing to do
-  }
-
-  // Read the first chunk to detect the boundary line
-  // A multipart body always starts with "--<boundary>\r\n"
-  let firstChunk = null;
-
-  req.once("data", (chunk) => {
-    firstChunk = chunk;
-
-    // The boundary is the content of the first line minus the leading "--"
-    const firstLine = chunk.toString("latin1").split("\r\n")[0];
-    if (firstLine.startsWith("--")) {
-      const boundary = firstLine.slice(2); // strip "--"
-      req.headers["content-type"] = `multipart/form-data; boundary=${boundary}`;
-    }
-
-    // Re-assemble the stream: push the buffered chunk back, then continue
-    const readable = new Readable({
-      read() {},
-    });
-    readable.push(firstChunk);
-
-    // Pipe remaining data from the original request into our new readable
-    req.on("data", (d) => readable.push(d));
-    req.on("end", () => readable.push(null));
-    req.on("error", (e) => readable.destroy(e));
-
-    // Replace req's stream interface so multer reads from our rebuilt stream
-    req.pipe = readable.pipe.bind(readable);
-    req.on = readable.on.bind(readable);
-    req.once = readable.once.bind(readable);
-    req.resume = readable.resume.bind(readable);
-    req.unpipe = readable.unpipe.bind(readable);
-    req.readable = true;
-
-    next();
-  });
-
-  req.once("error", next);
-
-  // If the request ends before any data (empty body), just continue
-  req.once("end", () => {
-    if (!firstChunk) next();
-  });
-}
-
-// ─────────────────────────────────────────────────
 // Simple and clean createUploader factory
 // ─────────────────────────────────────────────────
 const createUploader = (folderName, fieldName, options = {}) => {
   const storage = new CloudinaryStorage({
     cloudinary,
-    params: async (req, file) => {
-      // Resolve custom public_id callback or default fallback pattern
-      const publicId = typeof options.publicIdResolver === "function"
-        ? options.publicIdResolver(req, file)
-        : `${folderName}_${Date.now()}_${file.originalname ? file.originalname.split(".")[0] : "image"}`;
-
-      return {
-        folder: `printyatri/${folderName}`,
-        allowed_formats: allowFormats,
-        transformation: options.transformation || [{ width: 500, height: 500, crop: "fill", quality: "auto" }],
-        public_id: publicId,
-      };
+    params: {
+      folder: `printyatri/${folderName}`,
+      allowed_formats: allowFormats,
+      transformation: options.transformation || [{ width: 500, height: 500, crop: "fill", quality: "auto" }],
+      public_id: (req, file) => {
+        const publicId = typeof options.publicIdResolver === "function"
+          ? options.publicIdResolver(req, file)
+          : `${folderName}_${Date.now()}_${file.originalname ? file.originalname.split(".")[0] : "image"}`;
+        
+        // Sanitize to prevent spaces or special characters in Cloudinary public_id
+        return publicId.replace(/[^a-zA-Z0-9_\-]/g, "_");
+      },
     },
   });
 
@@ -159,24 +78,24 @@ const createUploader = (folderName, fieldName, options = {}) => {
     fileFilter,
   }).single(fieldName);
 
-  // Return a middleware array so that fixMultipartBoundary patches the headers before multer parses it
-  return [
-    fixMultipartBoundary,
-    (req, res, next) => {
-      upload(req, res, (err) => {
-        if (err) return next(err);
-        
-        if (req.file) {
-          // Provide backward compatibility with controllers expecting the raw cloudinary result shape
-          req.file.cloudinary = {
-            secure_url: req.file.path,
-            public_id: req.file.filename,
-          };
-        }
-        next();
-      });
-    },
-  ];
+  // Return middleware that parses the upload and formats req.file for backward compatibility
+  return (req, res, next) => {
+    upload(req, res, (err) => {
+      if (err) {
+        console.error(`❌ Upload Error for field [${fieldName}]:`, err);
+        return next(err);
+      }
+      
+      if (req.file) {
+        // Provide backward compatibility with controllers expecting the raw cloudinary result shape
+        req.file.cloudinary = {
+          secure_url: req.file.path,
+          public_id: req.file.filename,
+        };
+      }
+      next();
+    });
+  };
 };
 
 // ─────────────────────────────────────────────────
