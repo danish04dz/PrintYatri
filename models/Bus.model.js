@@ -55,9 +55,9 @@ const busSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// ✅ NEW: Indexes for filtering and performance
+// ✅ Indexes for filtering and performance
+// Note: busNumber index is created automatically via `unique: true` in the schema field
 busSchema.index({ agency: 1, isActive: 1 });
-busSchema.index({ busNumber: 1 });
 busSchema.index({ agency: 1, createdAt: -1 });
 
 module.exports = mongoose.model("Bus", busSchema);
