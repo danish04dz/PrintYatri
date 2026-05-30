@@ -34,3 +34,6 @@ coverage/
 PrintYatri_API.postman_collection.json
 *.postman_collection.json
 *.postman_environment.json
+
+createAdmin.js
+fixPassword.js

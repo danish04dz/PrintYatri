@@ -12,6 +12,12 @@ const {
   getAllTickets,
   getAllDemoRequests,
   updateDemoRequestStatus,
+  getAllBuses,
+  updateBusStatus,
+  getRevenueAnalytics,
+  getRoutesAndStops,
+  updateRouteStops,
+  getAllPlatformUsers,
 } = require("../controllers/admin.js");
 
 const {
@@ -55,8 +61,22 @@ router.patch("/users/:userId/reset-password", verifyJWT, isAdmin, resetUserPassw
 // Conductors
 router.get("/conductors", verifyJWT, isAdmin, getAllConductors);
 
+// Buses — NEW
+router.get("/buses", verifyJWT, isAdmin, getAllBuses);
+router.patch("/buses/:busId/status", verifyJWT, isAdmin, updateBusStatus);
+
 // Tickets
 router.get("/tickets", verifyJWT, isAdmin, getAllTickets);
+
+// Revenue Analytics — NEW
+router.get("/revenue", verifyJWT, isAdmin, getRevenueAnalytics);
+
+// Routes & Stops — NEW
+router.get("/routes", verifyJWT, isAdmin, getRoutesAndStops);
+router.patch("/routes/:routeId/stops", verifyJWT, isAdmin, updateRouteStops);
+
+// Users — NEW
+router.get("/users", verifyJWT, isAdmin, getAllPlatformUsers);
 
 // Demo Requests
 router.get("/demo-requests", verifyJWT, isAdmin, getAllDemoRequests);

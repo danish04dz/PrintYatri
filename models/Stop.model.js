@@ -15,9 +15,13 @@ const stopSchema = new mongoose.Schema({
     route:{
         type:mongoose.Schema.Types.ObjectId,
         ref:"Route",
-        required:true
+        required:true,
+        index: true,
     }
 
 },{timestamps:true})
+
+// ✅ NEW: Index for sorting
+stopSchema.index({ route: 1, order: 1 });
 
 module.exports = mongoose.model("Stop",stopSchema)

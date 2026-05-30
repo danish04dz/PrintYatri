@@ -59,7 +59,7 @@ exports.createAgency = async (req, res, next) => {
       licenseNumber,
       status: "approved",
       subscriptionPlan,
-      maxBuses: subscriptionPlan === "paid" ? 50 : 5,
+      maxBuses: subscriptionPlan === "paid" ? 5 : 1,
       trialExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
     });
 
@@ -99,7 +99,7 @@ exports.upgradePlan = async (req, res, next) => {
     const updateData = {
       subscriptionPlan,
       // Upgrade bus limit based on plan
-      maxBuses: subscriptionPlan === "paid" ? 50 : 5,
+      maxBuses: subscriptionPlan === "paid" ? 5 : 1,
     };
 
     // Reset trial expiry if going back to trial

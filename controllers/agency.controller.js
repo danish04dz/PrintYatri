@@ -819,6 +819,114 @@ exports.removeAdvertiseImage = async (req, res, next) => {
 };
 
 // ─────────────────────────────────────────────────
+// Get Routes for Bus (Agency Owner) — ✅ NEW
+// ─────────────────────────────────────────────────
+exports.getBusRoutes = async (req, res, next) => {
+  try {
+    const { busId } = req.params;
+    const agency = await getAgencyForOwner(req.user._id);
+    if (!agency) {
+      return res.status(404).json({ success: false, message: "Agency not found" });
+    }
+
+    const bus = await Bus.findOne({ _id: busId, agency: agency._id });
+    if (!bus) {
+      return res.status(404).json({ success: false, message: "Bus not found" });
+    }
+
+    const routes = await Route.find({ bus: busId }).sort({ createdAt: -1 });
+    const routesWithStops = await Promise.all(
+      routes.map(async (route) => {
+        const stops = await Stop.find({ route: route._id }).sort({ order: 1 });
+        return { ...route.toObject(), stops };
+      })
+    );
+
+    return res.status(200).json({
+      success: true,
+      routes: routesWithStops,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ─────────────────────────────────────────────────
+// Get Single Route Details (Agency Owner)
+// ─────────────────────────────────────────────────
+exports.getRouteDetails = async (req, res, next) => {
+  try {
+    const { routeId } = req.params;
+    const agency = await getAgencyForOwner(req.user._id);
+    if (!agency) {
+      return res.status(404).json({ success: false, message: "Agency not found" });
+    }
+
+    const route = await Route.findOne({ _id: routeId, agency: agency._id })
+      .populate("bus", "busNumber busName");
+    if (!route) {
+      return res.status(404).json({ success: false, message: "Route not found" });
+    }
+
+    const stops = await Stop.find({ route: routeId }).sort({ order: 1 });
+
+    return res.status(200).json({
+      success: true,
+      route: { ...route.toObject(), stops },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ─────────────────────────────────────────────────
+// Update Route Stops (Agency Owner) — ✅ NEW
+// ─────────────────────────────────────────────────
+exports.updateRouteStopsAgency = async (req, res, next) => {
+  try {
+    const { routeId } = req.params;
+    const { stops } = req.body;
+
+    if (!Array.isArray(stops) || stops.length < 2) {
+      return res.status(400).json({
+        success: false,
+        message: "Stops must be an array with at least 2 stops",
+      });
+    }
+
+    const agency = await getAgencyForOwner(req.user._id);
+    if (!agency) {
+      return res.status(404).json({ success: false, message: "Agency not found" });
+    }
+
+    const route = await Route.findOne({ _id: routeId, agency: agency._id });
+    if (!route) {
+      return res.status(404).json({ success: false, message: "Route not found" });
+    }
+
+    // Delete existing stops
+    await Stop.deleteMany({ route: routeId });
+
+    // Create new stops
+    const newStops = await Stop.create(
+      stops.map((s, idx) => ({
+        stopName: s.stopName,
+        order: s.order || idx + 1,
+        route: routeId,
+      }))
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Route stops updated successfully",
+      route: { ...route.toObject(), stops: newStops },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ─────────────────────────────────────────────────
 // Update Agency Details
 // ─────────────────────────────────────────────────
 exports.updateAgencyProfile = async (req, res, next) => {

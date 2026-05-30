@@ -10,6 +10,9 @@ const {
   deleteBus,
   addRoutesAndStops,
   updateRoute,
+  getBusRoutes,
+  getRouteDetails,
+  updateRouteStopsAgency,
   registerConductor,
   getConductors,
   assignConductor,
@@ -42,7 +45,10 @@ router.delete("/buses/:busId", verifyJWT, isAgency, deleteBus); // ✅ NEW
 
 // Route & Stop Management
 router.post("/addRoutesAndStops", verifyJWT, isAgency, addRoutesAndStops);
-router.put("/routes/:routeId", verifyJWT, isAgency, updateRoute); // ✅ NEW
+router.put("/routes/:routeId", verifyJWT, isAgency, updateRoute);
+router.get("/bus/:busId/routes", verifyJWT, isAgency, getBusRoutes);                    // ✅ NEW
+router.get("/routes/:routeId", verifyJWT, isAgency, getRouteDetails);                   // ✅ NEW
+router.patch("/routes/:routeId/stops", verifyJWT, isAgency, updateRouteStopsAgency);   // ✅ NEW
 
 // Conductor Management
 router.post("/registerConductor", verifyJWT, isAgency, registerConductor);

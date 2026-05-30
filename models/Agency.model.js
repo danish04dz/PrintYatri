@@ -67,7 +67,7 @@ const agencySchema = new mongoose.Schema(
     // ✅ NEW: plan-based bus limit
     maxBuses: {
       type: Number,
-      default: 5,
+      default: 1,
     },
 
     // ✅ NEW: local shop advertisement image (shows on printed ticket bottom)

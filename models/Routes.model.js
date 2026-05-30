@@ -44,4 +44,9 @@ const routeSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// ✅ NEW: Indexes for filtering
+routeSchema.index({ bus: 1 });
+routeSchema.index({ agency: 1 });
+routeSchema.index({ bus: 1, agency: 1 });
+
 module.exports = mongoose.model("Route", routeSchema);

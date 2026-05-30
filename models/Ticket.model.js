@@ -92,5 +92,10 @@ const ticketSchema = new mongoose.Schema(
 // Index for fast conductor history queries
 ticketSchema.index({ conductor: 1, createdAt: -1 });
 ticketSchema.index({ agency: 1, createdAt: -1 });
+// ✅ NEW: Indexes for filtering
+ticketSchema.index({ agency: 1, bus: 1, createdAt: -1 });
+ticketSchema.index({ bus: 1, createdAt: -1 });
+ticketSchema.index({ paymentMode: 1 });
+ticketSchema.index({ createdAt: -1 });
 
 module.exports = mongoose.model("Ticket", ticketSchema);
