@@ -13,14 +13,25 @@ cloudinary.config({
   secure: true,
 });
 
+// Allowed file types & MIME types
+const allowFormats = ["jpg", "jpeg", "png", "webp"];
+
+const allowedMimeTypes = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "application/octet-stream", // Allow React Native octet-stream fallback
+];
+
+const IMAGE_EXTENSION_RE = /\.(jpe?g|png|webp|gif)$/i;
+
 // ─────────────────────────────────────────────────
 // File filter — accept images from both browser and
 // React Native Android (which sends octet-stream).
 // ─────────────────────────────────────────────────
-const IMAGE_EXTENSION_RE = /\.(jpe?g|png|webp|gif)$/i;
-
 const fileFilter = (req, file, cb) => {
-  const isImageMime = file.mimetype.startsWith("image/");
+  const isImageMime = allowedMimeTypes.includes(file.mimetype);
   const isOctetStream = file.mimetype === "application/octet-stream";
   const hasImageExtension = IMAGE_EXTENSION_RE.test(file.originalname || "");
 
@@ -32,7 +43,7 @@ const fileFilter = (req, file, cb) => {
     }
     cb(null, true);
   } else {
-    cb(new Error("Only image files are allowed (jpg, jpeg, png, webp)"), false);
+    cb(new Error("Only jpg, png, jpeg, webp allowed"), false);
   }
 };
 
@@ -119,88 +130,80 @@ function fixMultipartBoundary(req, res, next) {
 }
 
 // ─────────────────────────────────────────────────
-// Middleware factory: boundary-fix + multer + CloudinaryStorage
+// Simple and clean createUploader factory
 // ─────────────────────────────────────────────────
-function makeUploadMiddleware(fieldName, cloudinaryOptions) {
+const createUploader = (folderName, fieldName, options = {}) => {
   const storage = new CloudinaryStorage({
-    cloudinary: cloudinary,
-    params: {
-      folder: cloudinaryOptions.folder,
-      allowed_formats: cloudinaryOptions.allowed_formats || ["jpg", "jpeg", "png", "webp"],
-      transformation: cloudinaryOptions.transformation,
-      public_id: (req, file) => {
-        if (typeof cloudinaryOptions.public_id === "function") {
-          return cloudinaryOptions.public_id(req, file);
-        }
-        return cloudinaryOptions.public_id;
-      },
+    cloudinary,
+    params: async (req, file) => {
+      // Resolve custom public_id callback or default fallback pattern
+      const publicId = typeof options.publicIdResolver === "function"
+        ? options.publicIdResolver(req, file)
+        : `${folderName}_${Date.now()}_${file.originalname ? file.originalname.split(".")[0] : "image"}`;
+
+      return {
+        folder: `printyatri/${folderName}`,
+        allowed_formats: allowFormats,
+        transformation: options.transformation || [{ width: 500, height: 500, crop: "fill", quality: "auto" }],
+        public_id: publicId,
+      };
     },
   });
 
-  const upload = multer({ storage, fileFilter, limits }).single(fieldName);
+  const upload = multer({
+    storage,
+    limits,
+    fileFilter,
+  }).single(fieldName);
 
-  // Return an array of middleware so Express calls them in sequence:
-  // [0] fixMultipartBoundary  — patches Content-Type before multer sees it
-  // [1] multer single upload  — parses multipart and uploads to Cloudinary via CloudinaryStorage
+  // Return a middleware array so that fixMultipartBoundary patches the headers before multer parses it
   return [
     fixMultipartBoundary,
-
     (req, res, next) => {
       upload(req, res, (err) => {
         if (err) return next(err);
         
         if (req.file) {
-          // For backward compatibility with any controllers expecting the raw cloudinary result shape
+          // Provide backward compatibility with controllers expecting the raw cloudinary result shape
           req.file.cloudinary = {
             secure_url: req.file.path,
             public_id: req.file.filename,
           };
         }
-        
         next();
       });
     },
   ];
-}
+};
 
 // ─────────────────────────────────────────────────
 // Upload Middlewares
 // ─────────────────────────────────────────────────
 
-const uploadConductorPhoto = makeUploadMiddleware("photo", {
-  folder: "printyatri/conductors",
-  allowed_formats: ["jpg", "jpeg", "png", "webp"],
+const uploadConductorPhoto = createUploader("conductors", "photo", {
   transformation: [{ width: 400, height: 400, crop: "fill", quality: "auto" }],
-  public_id: (req) =>
+  publicIdResolver: (req) =>
     `conductor_${req.params.conductorId || String(req.user._id)}_${Date.now()}`,
 });
 
-const uploadAgencyLogo = makeUploadMiddleware("logo", {
-  folder: "printyatri/agencies",
-  allowed_formats: ["jpg", "jpeg", "png", "webp"],
+const uploadAgencyLogo = createUploader("agencies", "logo", {
   transformation: [{ width: 500, height: 500, crop: "fill", quality: "auto" }],
-  public_id: (req) => `agency_${String(req.user._id)}_${Date.now()}`,
+  publicIdResolver: (req) => `agency_${String(req.user._id)}_${Date.now()}`,
 });
 
-const uploadUserPhoto = makeUploadMiddleware("photo", {
-  folder: "printyatri/users",
-  allowed_formats: ["jpg", "jpeg", "png", "webp"],
+const uploadUserPhoto = createUploader("users", "photo", {
   transformation: [{ width: 400, height: 400, crop: "fill", quality: "auto" }],
-  public_id: (req) => `user_${String(req.user._id)}_${Date.now()}`,
+  publicIdResolver: (req) => `user_${String(req.user._id)}_${Date.now()}`,
 });
 
-const uploadCompanyImage = makeUploadMiddleware("image", {
-  folder: "printyatri/company",
-  allowed_formats: ["jpg", "jpeg", "png", "webp"],
+const uploadCompanyImage = createUploader("company", "image", {
   transformation: [{ width: 1000, quality: "auto" }],
-  public_id: () => `company_${Date.now()}`,
+  publicIdResolver: () => `company_${Date.now()}`,
 });
 
-const uploadAdvertiseImage = makeUploadMiddleware("advertise", {
-  folder: "printyatri/advertise",
-  allowed_formats: ["jpg", "jpeg", "png", "webp"],
+const uploadAdvertiseImage = createUploader("advertise", "advertise", {
   transformation: [{ width: 600, height: 200, crop: "fill", quality: "auto" }],
-  public_id: (req) => `advertise_${String(req.user._id)}_${Date.now()}`,
+  publicIdResolver: (req) => `advertise_${String(req.user._id)}_${Date.now()}`,
 });
 
 // ─────────────────────────────────────────────────
