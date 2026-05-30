@@ -1,4 +1,5 @@
 const cloudinary = require("cloudinary").v2;
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const multer = require("multer");
 const { Readable } = require("stream");
 
@@ -11,12 +12,6 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
   secure: true,
 });
-
-// ─────────────────────────────────────────────────
-// Use memory storage — files held in buffer, then
-// streamed directly to Cloudinary v2 API
-// ─────────────────────────────────────────────────
-const memoryStorage = multer.memoryStorage();
 
 // ─────────────────────────────────────────────────
 // File filter — accept images from both browser and
@@ -124,66 +119,46 @@ function fixMultipartBoundary(req, res, next) {
 }
 
 // ─────────────────────────────────────────────────
-// Helper: stream a buffer to Cloudinary v2
-// ─────────────────────────────────────────────────
-function uploadToCloudinary(buffer, options) {
-  return new Promise((resolve, reject) => {
-    const uploadStream = cloudinary.uploader.upload_stream(options, (error, result) => {
-      if (error) return reject(error);
-      resolve(result);
-    });
-    const readable = new Readable();
-    readable.push(buffer);
-    readable.push(null);
-    readable.pipe(uploadStream);
-  });
-}
-
-// ─────────────────────────────────────────────────
-// Middleware factory: boundary-fix + multer + cloudinary
+// Middleware factory: boundary-fix + multer + CloudinaryStorage
 // ─────────────────────────────────────────────────
 function makeUploadMiddleware(fieldName, cloudinaryOptions) {
-  const upload = multer({ storage: memoryStorage, fileFilter, limits }).single(fieldName);
+  const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+      folder: cloudinaryOptions.folder,
+      allowed_formats: cloudinaryOptions.allowed_formats || ["jpg", "jpeg", "png", "webp"],
+      transformation: cloudinaryOptions.transformation,
+      public_id: (req, file) => {
+        if (typeof cloudinaryOptions.public_id === "function") {
+          return cloudinaryOptions.public_id(req, file);
+        }
+        return cloudinaryOptions.public_id;
+      },
+    },
+  });
+
+  const upload = multer({ storage, fileFilter, limits }).single(fieldName);
 
   // Return an array of middleware so Express calls them in sequence:
   // [0] fixMultipartBoundary  — patches Content-Type before multer sees it
-  // [1] multer single upload  — parses multipart and populates req.file
-  // [2] cloudinary uploader   — streams buffer to Cloudinary
+  // [1] multer single upload  — parses multipart and uploads to Cloudinary via CloudinaryStorage
   return [
     fixMultipartBoundary,
 
     (req, res, next) => {
       upload(req, res, (err) => {
         if (err) return next(err);
+        
+        if (req.file) {
+          // For backward compatibility with any controllers expecting the raw cloudinary result shape
+          req.file.cloudinary = {
+            secure_url: req.file.path,
+            public_id: req.file.filename,
+          };
+        }
+        
         next();
       });
-    },
-
-    async (req, res, next) => {
-      if (!req.file) return next(); // no file — let controller handle the 400
-
-      try {
-        const publicId =
-          typeof cloudinaryOptions.public_id === "function"
-            ? cloudinaryOptions.public_id(req, req.file)
-            : cloudinaryOptions.public_id;
-
-        const result = await uploadToCloudinary(req.file.buffer, {
-          folder: cloudinaryOptions.folder,
-          allowed_formats: cloudinaryOptions.allowed_formats || ["jpg", "jpeg", "png", "webp"],
-          transformation: cloudinaryOptions.transformation,
-          public_id: publicId,
-        });
-
-        // Attach Cloudinary result so controllers can read it
-        req.file.cloudinary = result;
-        req.file.path = result.secure_url;    // drop-in compat
-        req.file.filename = result.public_id; // drop-in compat
-
-        next();
-      } catch (uploadErr) {
-        next(uploadErr);
-      }
     },
   ];
 }
