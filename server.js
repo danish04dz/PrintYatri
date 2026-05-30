@@ -28,21 +28,33 @@ app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 const allowedOrigins = [
   "http://localhost:8081",
   "http://localhost:5173",
-  "http://10.196.16.136:8081",
-  "http://10.196.16.240:8081",
-  "http://10.85.153.136:8081",
-  "exp://10.98.155.136:8081",
+  "http://127.0.0.1:5173",
+  "http://127.0.0.1:8081",
   "https://printyatri.netlify.app",
 ];
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow requests with no origin (Postman, mobile apps, curl)
-      if (!origin || allowedOrigins.includes(origin)) {
+      // Allow requests with no origin (Postman, native mobile apps, curl)
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      const isAllowed =
+        allowedOrigins.includes(origin) ||
+        /^http:\/\/localhost:\d+$/.test(origin) ||
+        /^http:\/\/127\.0\.0\.1:\d+$/.test(origin) ||
+        /^http:\/\/192\.168\.\d+\.\d+(:\d+)?$/.test(origin) ||
+        /^http:\/\/10\.\d+\.\d+\.\d+(:\d+)?$/.test(origin) ||
+        /^exp:\/\/10\.\d+\.\d+\.\d+:\d+$/.test(origin) ||
+        /\.netlify\.app$/.test(origin) ||
+        /printyatri\.com$/.test(origin);
+
+      if (isAllowed) {
         callback(null, true);
       } else {
-        callback(new Error("Not allowed by CORS"));
+        callback(new Error(`Not allowed by CORS: ${origin}`));
       }
     },
     credentials: true,
@@ -120,6 +132,14 @@ app.use("/api/conductor", require("./routes/conductor.routes"));
 app.use("/api/data", require("./routes/bus.routes"));
 app.use("/api/demo", require("./routes/demo.routes"));
 app.use("/api/company", require("./routes/company.routes"));
+
+const { uploadAgencyLogo } = require("./middleware/upload");
+app.post("/api/test-upload-logo", (req, res, next) => {
+  req.user = { _id: "665000000000000000000001" };
+  next();
+}, uploadAgencyLogo, (req, res) => {
+  res.json({ success: true, file: req.file });
+});
 
 // ─────────────────────────────────────────────────
 // 404 Handler
