@@ -18,6 +18,7 @@ const allowFormats = ["jpg", "jpeg", "png", "webp"];
 
 const allowedMimeTypes = [
   "image/jpeg",
+  "image/jpg", // Support React Native's manual image/jpg type resolution
   "image/png",
   "image/webp",
   "image/gif",
@@ -40,6 +41,8 @@ const fileFilter = (req, file, cb) => {
     if (isOctetStream && hasImageExtension) {
       const ext = file.originalname.split(".").pop().toLowerCase();
       file.mimetype = ext === "jpg" ? "image/jpeg" : `image/${ext}`;
+    } else if (file.mimetype === "image/jpg") {
+      file.mimetype = "image/jpeg";
     }
     cb(null, true);
   } else {
