@@ -94,7 +94,7 @@ const uploadConductorPhoto = makeUploadMiddleware("photo", {
   allowed_formats: ["jpg", "jpeg", "png", "webp"],
   transformation: [{ width: 400, height: 400, crop: "fill", quality: "auto" }],
   public_id: (req) =>
-    `conductor_${req.params.id || String(req.user._id)}_${Date.now()}`,
+    `conductor_${req.params.conductorId || String(req.user._id)}_${Date.now()}`,
 });
 
 const uploadAgencyLogo = makeUploadMiddleware("logo", {

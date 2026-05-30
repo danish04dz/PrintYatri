@@ -59,7 +59,7 @@ router.delete("/conductors/:conductorId", verifyJWT, isAgency, deleteConductor);
 
 // Image Uploads (Cloudinary)
 router.post(                                                                              // ✅ NEW
-  "/conductors/:id/upload-photo",
+  "/conductors/:conductorId/upload-photo",
   verifyJWT,
   isAgency,
   uploadConductorPhoto,
