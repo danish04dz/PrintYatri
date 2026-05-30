@@ -139,19 +139,25 @@ app.use(errorHandler);
 // ─────────────────────────────────────────────────
 // Start Server
 // ─────────────────────────────────────────────────
+const PORT = process.env.PORT || 5000;
+
+// Bind the port immediately so Render (and other platforms) detect it right away.
+// MongoDB connects in parallel — if it fails we log the error but keep the server
+// alive so health-check routes remain reachable.
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`🚀 PrintYatri Server running on port ${PORT}`);
+  console.log(`📋 Environment: ${process.env.NODE_ENV}`);
+});
+
 mongoose
   .connect(process.env.MONGODB_URI, {
     serverSelectionTimeoutMS: 10000,
   })
   .then(() => {
     console.log("✅ MongoDB Connected");
-    const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => {
-      console.log(`🚀 PrintYatri Server running at http://localhost:${PORT}`);
-      console.log(`📋 Environment: ${process.env.NODE_ENV}`);
-    });
   })
   .catch((err) => {
     console.error("❌ MongoDB connection failed:", err.message);
-    process.exit(1);
+    // Do NOT exit — keep the server alive so Render doesn't mark the deploy as failed
+    // purely due to a transient DB connection issue.
   });
