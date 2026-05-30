@@ -21,8 +21,22 @@ const memoryStorage = multer.memoryStorage();
 // ─────────────────────────────────────────────────
 // File filter — reject non-images
 // ─────────────────────────────────────────────────
+// NOTE: Android React Native sends images as "application/octet-stream"
+// instead of "image/jpeg" etc., so we fall back to checking the file
+// extension when the MIME type is octet-stream.
+const IMAGE_EXTENSION_RE = /\.(jpe?g|png|webp|gif)$/i;
+
 const fileFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith("image/")) {
+  const isImageMime = file.mimetype.startsWith("image/");
+  const isOctetStream = file.mimetype === "application/octet-stream";
+  const hasImageExtension = IMAGE_EXTENSION_RE.test(file.originalname || "");
+
+  if (isImageMime || (isOctetStream && hasImageExtension)) {
+    // Normalise the MIME type so Cloudinary receives "image/jpeg" etc.
+    if (isOctetStream && hasImageExtension) {
+      const ext = file.originalname.split(".").pop().toLowerCase();
+      file.mimetype = ext === "jpg" ? "image/jpeg" : `image/${ext}`;
+    }
     cb(null, true);
   } else {
     cb(new Error("Only image files are allowed (jpg, jpeg, png, webp)"), false);
