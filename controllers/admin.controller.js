@@ -36,6 +36,17 @@ exports.createAgency = async (req, res, next) => {
       });
     }
 
+    // Check if email already exists (only if agencyEmail is provided)
+    if (agencyEmail) {
+      const existingEmail = await User.findOne({ email: agencyEmail.toLowerCase() });
+      if (existingEmail) {
+        return res.status(409).json({
+          success: false,
+          message: "A user with this email address already exists",
+        });
+      }
+    }
+
     // Create the user account (hashing happens in pre-save hook)
     // Email is required by User model — generate a synthetic one if not provided
     const ownerEmail = agencyEmail || `${phone}@printyatri.local`;
